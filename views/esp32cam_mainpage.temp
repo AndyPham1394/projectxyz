@@ -47,10 +47,10 @@ body {
 	</div>
 	<div class="btn-group" role="group" aria-label="Basic example">
 		<button id="toggle-stream" class="btn btn-primary" type="button">Start Stream</button>
-		<button id="setImage" class="btn btn-warning" type="button">BẬT ĐÈN</button>
-		<button id="setquality" type="button" class="btn btn-dark">TẮT ĐÈN</button>
-		<button id="setmirror" type="button" class="btn btn-success">QUAY TRÁI</button>
-		<button id="setgain" type="button" class="btn btn-success">QUAY PHẢI</button>
+		<button id="setImage" class="btn btn-warning" type="button">LIGHT ON</button>
+		<button id="setquality" type="button" class="btn btn-dark">LIGHT OFF</button>
+		<button id="setmirror" type="button" class="btn btn-success">TURN LEFT</button>
+		<button id="setgain" type="button" class="btn btn-success">TURN RIGHT</button>
 	</div>
 
 </div>
