@@ -9,3 +9,8 @@ for env
 - add mongourl
   MONGOURL=<your_mongodb_url>
 - we must wait for mongodb connected before start listen to clients on http and websocket
+
+for chat's websocket
+
+- chat's websocket server is ran on child process forked by main process
+- if main process unexpectedly exit, chat's websocket server may not be exit, we have to do it manually
