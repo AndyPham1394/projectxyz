@@ -1,23 +1,17 @@
 const express = require("express");
 const machineRouter = express.Router();
 const machineController = require("../controllers/controller.machineController.js");
-const View = require("../views/views.viewEngine.js");
 
 machineRouter.use(express.static("statics"));
 // '/'
-machineRouter.get(
-  "/",
-  machineController.getMainPage,
-  View.process,
-  (req, res) => {
-    // request đến được đây tức là không render
-    res.send("khong render gi ca").end();
-  }
-);
+machineRouter.get("/", machineController.getMainPage, (req, res) => {
+  // request đến được đây tức là không render
+  res.send("khong render gi ca").end();
+});
 
 // machinesubmit và onlinemachine list
 machineRouter.post("/machinesubmit", machineController.postMachineSubmit);
-machineRouter.get("/onlinemachine", machineController.getOnlineMachine);
+//machineRouter.get("/onlinemachine", machineController.getOnlineMachine);
 
 // router dành riêng cho esp32cam
 machineRouter.use("/esp32cam", machineController.esp32cam);

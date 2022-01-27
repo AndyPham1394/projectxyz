@@ -56,14 +56,14 @@ function updateLocalMachineList(machinelist = []) {
 var onlineLocalMachineList = [];
 var pingEvent = new EventEmitter();
 // ping ok thì check d? push name vào list n?u chua có trong list
-pingEvent.on("pingok", (name) => {
-  if (onlineLocalMachineList.indexOf(name) == -1) {
-    onlineLocalMachineList.push(name);
+pingEvent.on("pingok", (item) => {
+  if (onlineLocalMachineList.indexOf(item) == -1) {
+    onlineLocalMachineList.push(item);
   }
 });
 // ping false thì lo?i b? name trong list n?u dang ? trong online list
-pingEvent.on("pingfalse", (name) => {
-  let position = onlineLocalMachineList.indexOf(name);
+pingEvent.on("pingfalse", (item) => {
+  let position = onlineLocalMachineList.indexOf(item);
   if (position != -1) {
     onlineLocalMachineList.splice(position, 1);
   }
@@ -73,15 +73,37 @@ function pingMachine(machinelist) {
   machinelist.forEach((item) => {
     http
       .get(`http://${item.ip}/ping`, (res) => {
-        //console.log("localmachine : " + item.name + " da tra loi ping");
-        pingEvent.emit("pingok", item.name);
+        pingEvent.emit("pingok", item);
       })
       .on("error", (err) => {
-        //console.log("local machine : " + item.name + " khong tra loi ping!");
-        pingEvent.emit("pingfalse", item.name);
-      });
+        pingEvent.emit("pingfalse", item);
+      })
+      .end();
   });
 }
+function getLocalData() {
+  console.log(
+    "so luong local machine hoat dong : " + onlineLocalMachineList.length
+  );
+  let esp8266 = onlineLocalMachineList.find((item) => item.name === "esp8266");
+  if (esp8266) {
+    http
+      .get(`http://${esp8266.ip}`, (res) => {
+        res.on("data", (chunk) => {
+          console.log(JSON.parse(chunk.toString()));
+        });
+        res.on("error", (err) => {
+          console.log(err);
+        });
+      })
+      .on("error", (err) => {
+        console.log("error : " + err);
+      });
+  }
+}
+setTimeout(() => {
+  getLocalData();
+}, 20000);
 
 pingMachine(localMachineList);
 setInterval(() => {
@@ -89,24 +111,18 @@ setInterval(() => {
 }, 10000);
 
 machineController.getMainPage = function (req, res, next) {
-  res.controllerJob = {};
-  res.controllerJob.ten = "machineController";
-  res.controllerJob.task = "mainpage";
-  res.controllerJob.data = {
-    title: "template engine c?a tôi",
-    field1: onlineLocalMachineList.toString(),
-    field2: "control value2",
-    field3: "control value3",
-  };
-  //console.log("machineController.mainpage --done");
-  next();
+  res.render("machinemainpage", {
+    title: "Machine MainPage",
+    field1: onlineLocalMachineList.length,
+    field2: onlineLocalMachineList[0].name,
+    field3: onlineLocalMachineList[1].name,
+  });
 };
 machineController.getPPI = function (req, res, next) {
   console.log("machineController.getPPI --done");
   process.env.machineController = true;
   next();
 };
-
 /**
  * router cho path: '/api/machine/machieesubmit', các localmachine s? báo danh ? dây d? server có th?
  * bi?t du?c ip c?a chúng, localmachine s? c?n ph?i có password d? có th? báo danh thành công, n?u password
@@ -143,32 +159,20 @@ machineController.postMachineSubmit = function (req, res, next) {
                 let val = req.body[`${pro}`];
                 let obj = {
                   name: val,
-                  ip: req.ip,
+                  ip: req.ip.replaceAll(/.*:/g, ""),
                 };
-                console.log("name : ", val);
-                console.log("substr : ", req.ip.substring(0, 2));
-                if (req.ip.substring(0, 7) == "::ffff:") {
-                  console.log(req.ip.substring(7));
-                  req.ip = req.ip.substring(7);
-                } else if (req.ip.substring(0, 2) == "::") {
-                  console.log(req.ip.substring(2));
-                  obj.ip = req.ip.substring(2);
-                }
                 let trung = false;
                 localMachineList.forEach((ob) => {
                   if (ob.name.toString() == val) {
-                    console.log("name da ton tai trong danh sach - thay the");
                     trung = true;
-                    ob.ip = req.ip;
+                    ob.ip = obj.ip;
                   }
                 });
                 if (!trung) {
-                  console.log("push them vao danh sach");
                   // push danh sach va update file localmachinelist.txt
                   localMachineList.push(obj);
                 }
                 updateLocalMachineList(localMachineList);
-                console.log(localMachineList);
               }
             }
           } else {
