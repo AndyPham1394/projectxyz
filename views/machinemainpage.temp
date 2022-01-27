@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>#title#</title>
+</head>
+<body>
+    <p>#field2# #field3#</p>
+	<p>cac localmachine dang online la: #field1#</p>
+</body>
+</html>

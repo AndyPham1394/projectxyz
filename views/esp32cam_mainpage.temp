@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>#title#</title>
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<style>
+html {
+  background-color: #56baed;
+}
+img {
+  border-radius: 7px;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  height: 100vh;
+}
+.wrapper {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  min-height: 100%;
+  padding: 20px;
+  background-image: url("/img/camera.jpg");
+  background-size: cover;
+}
+.fadeInDown {
+  -webkit-animation-name: fadeInDown;
+  animation-name: fadeInDown;
+  -webkit-animation-duration: 1s;
+  animation-duration: 1s;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+</style>
+</head>
+
+
+<body onunload = "myfunc()">
+<div class="wrapper fadeInDown">
+	<div id = "div1" >	
+		<img id="stream" src=""class="img-fluid" alt="Stream">
+	</div>
+	<div class="btn-group" role="group" aria-label="Basic example">
+		<button id="toggle-stream" class="btn btn-primary" type="button">Start Stream</button>
+		<button id="setImage" class="btn btn-warning" type="button">BẬT ĐÈN</button>
+		<button id="setquality" type="button" class="btn btn-dark">TẮT ĐÈN</button>
+		<button id="setmirror" type="button" class="btn btn-success">QUAY TRÁI</button>
+		<button id="setgain" type="button" class="btn btn-success">QUAY PHẢI</button>
+	</div>
+
+</div>
+	<script src = '/js/esp32camscript.js'>
+	</script>
+</body>
+</html>

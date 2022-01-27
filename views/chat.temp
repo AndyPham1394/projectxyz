@@ -1,0 +1,196 @@
+<html lang="en">
+
+<head>
+  <title>#USERNAME#-RTC</title>
+  <link rel="shortcut icon" href="img/man-2-512.png" type="image/x-icon">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <!-- Font Awesome File -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="js/chatscript.js" defer> </script>
+  <style>
+  body  {
+    background-image: url("./img/background.jpg");
+    background-size: cover;
+  }
+  </style>
+</head>
+
+<body >
+  <div hidden id="username">#USERNAME#</div>
+  <div hidden id="secret">#SECRET#</div>
+  <div class="container app">
+    <div class="row app-one">
+      <!--UserInfo start-->
+      <div class="col-md-4" id="userProfile" hidden>
+        <div class="side-one">
+            <div class="row heading">
+                <a href="javascript:void(0)">
+                    <i class="fa fa-arrow-left fa-2x pull-left" aria-hidden="true" id ="userInfoBackArrow"></i>
+                </a>
+                <div class="col-sm-8 col-xs-7 heading-name">
+                    <div class="heading-name-meta">User Profile
+                    </div>
+                </div>
+            </div>
+            <div class="profile-userpic">
+                <img src="img/man-2-512.png" class="img-responsive" alt="profile picture" id="infoAvatar">
+                <form id="avatarUploadForm" action="./postavatar" method="POST" enctype="multipart/form-data" class="col-sm-1 col-xs-1  heading-dot pull-right">
+                  <input name="from" value="#USERNAME#" hidden>
+                  <input type="file" accept="image/*" style="display:none" name="file" id="avatarUpload">
+                  <label for="avatarUpload">
+                      <i class="fa fa-camera fa-2x" aria-hidden="true"></i> 
+                  </label>
+              </form>
+            </div>
+            <div class="heading-name-meta">
+                User Name </div>
+            <div class="text-center">
+                #USERNAME#
+            </div>
+        </div> 
+      </div>
+      <div class="col-md-4" id="groupProfile" hidden>
+        <div class="side-one">
+            <div class="row heading">
+                <a href="javascript:void(0)">
+                    <i class="fa fa-arrow-left fa-2x pull-left" aria-hidden="true" id ="groupInfoBackArrow"></i>
+                </a>
+                <div class="col-sm-8 col-xs-7 heading-name">
+                    <div class="heading-name-meta" id="groupInfoName">User Profile
+                    </div>
+                </div>
+            </div>
+            <div class="row sideBar" id="groupMembersBar">
+            
+            </div>
+        </div> 
+      </div>
+      <!--UserInfo end-->
+      <div class="col-sm-4 side" id="Box1">
+        <div class="side-one" >
+          <!-- Heading -->
+          <div class="row heading" style="background-color:rgb(209, 226, 209)">
+            <div class="col-sm-2 col-xs-3 heading-avatar">
+              <div class="heading-avatar-icon">
+                <img src="img/man-2-512.png" id="avatar">
+              </div>
+            </div>
+            <div class="col-sm-3 col-xs-3 heading-name pull-left">
+              <a class="heading-name-meta">#USERNAME#
+              </a>
+            </div> 
+            <div class="col-sm-1 col-xs-1  heading-dot  pull-right" title="User Info" id="userInfoButton">
+              <i class="fa fa-vcard fa-2x pull-right" aria-hidden="true" style="color:#156c72"></i>
+            </div>
+            <div class="col-sm-1 col-xs-1 heading-dot  pull-right" title="Create new group" id="newGroupButton">
+              <i class="fa fa-users fa-2x  pull-right" aria-hidden="true" style="color:#156c72"></i>
+            </div>
+            <div class="col-sm-1 col-xs-1 heading-dot  pull-right" title="Create new chat" id="addUserButton">
+              <i class="fa fa-user-plus fa-2x  pull-right" aria-hidden="true" style="color:#156c72"></i>
+            </div>      
+          </div>
+          <!-- Heading End -->
+          
+          <!-- SearchBox -->
+          <div class="row searchBox" id="searchBoxContainer" hidden>
+            <div class="col-sm-12 searchBox-inner">
+              <div class="form-group has-feedback">
+                <input type="text" class="form-control" name="searchText" id="searchBox">
+              </div>
+            </div>
+          </div>
+          <!-- Search Box End -->
+          <!-- relateBar start -->
+          <div class="row sideBar" id="relateBar">
+          </div>
+          <!-- relateBar end -->
+        </div>
+      </div>
+
+
+      <!-- New Message Sidebar End -->
+
+      <!-- Conversation Start -->
+      <div class="col-sm-8 conversation">
+        <!-- Heading -->
+        <div class="row heading" id="box2" style="background-color:rgb(209, 226, 209)">
+          <div class="col-sm-3 col-md-1 col-xs-3 heading-avatar">
+            <div class="heading-avatar-icon" id="focusAvatar" >
+              <img src="img/man-2-512.png">
+            </div>
+          </div>
+          <div class="col-sm-2 col-xs-7 heading-name">
+            <a class="heading-name-meta" id="onFocusName"></a>
+          </div>
+          <div class="col-sm-1 col-xs-2  heading-dot pull-left" title="On/Off audio">
+            <i class="fa fa-bell-slash fa-2x" aria-hidden="true" id="muteButton" style="color:#156c72"></i>
+          </div>     
+          <div class="col-sm-1 col-xs-2  heading-dot pull-left" title="Add an user into current group" id="inviteButton" hidden>
+            <i class="fa fa-plus-square fa-2x" aria-hidden="true" style="color:#156c72"></i>
+          </div>
+          <div class="col-sm-1 col-xs-2  heading-dot pull-left" title="Current group Info" id="membersButton" hidden>
+            <i class="fa fa-address-book fa-2x" aria-hidden="true" style="color:#156c72"></i>
+          </div>
+          <div class="col-sm-1 col-xs-2  heading-dot pull-left" title="Escape current group" id="escapeButton" hidden>
+            <i class="fa fa-share fa-2x" aria-hidden="true" style="color:#156c72"></i>
+          </div>
+          <div class="col-sm-4 col-xs-4 reply-main" id= "commandInput2Box" hidden>
+            <textarea class="form-control" rows="1" spellcheck="false" placeholder="Enter" id="commandInput2"></textarea>
+          </div>            
+          <div class="col-sm-1 col-xs-2  heading-dot pull-right" title="Delete current chat/group" id="deleteButton" hidden>
+            <i class="fa fa-trash fa-2x pull-right" aria-hidden="true" style="color:#156c72"></i>
+          </div>
+     
+        </div>
+        <!-- Heading End -->
+
+        <!-- Message Box -->
+        <!--THÊM HÌNH MẶC ĐỊNH VÀ LỜI CHÀO VÀO-->
+        <div class="row message" id="conversation">
+
+          <div class="row message-previous">
+            <div class="col-sm-12 previous">
+              <a onclick="previous()">
+              CLICK IN USER'S AVATAR TO SENT MESSAGE!
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Message Box End -->
+
+        <!-- Reply Box -->
+        <div class="row reply">
+          <div class="col-sm-9 col-xs-9 reply-main">
+            <textarea class="form-control" rows="1" id="comment" spellcheck="false" style="font-style: monospace;font-size:14px;font-weight: 600;"></textarea>
+          </div>
+          <div class="col-sm-1 col-xs-1 reply-recording" id="media">
+            <form id="fileUploadForm" action="./postmedia" method="POST" enctype="multipart/form-data">
+                <input name="from" value="#USERNAME#" hidden>
+                <input name="to" id="mediaSendTo" value="" hidden>
+                <input type="file" id="file" accept="image/*" style="display:none" name="file">
+                <label for="file">
+                  <i class="glyphicon glyphicon-picture" aria-hidden="true" style="font-size:20px"></i>
+                </label>
+            </form>
+          </div>
+          <div class="col-sm-1 col-xs-1 reply-send" id = 'button'>
+            <i class="fa fa-send fa-2x" aria-hidden="true"></i>
+          </div>
+        </div>
+        <!-- Reply Box End -->
+      </div>
+      <!-- Conversation End -->
+    </div>
+    <!-- App One End -->
+  </div>
+
+  <!-- App End -->
+
+</body>
+
+</html>

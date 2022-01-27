@@ -1,0 +1,44 @@
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<!------ Include the above in your HEAD tag ---------->
+<link rel="stylesheet" type="text/css" href="css/mystyles.css" media="screen" />
+
+<div class="wrapper fadeInDown" autofocus>
+  <div id="formContent">
+    <!-- Tabs Titles -->
+
+    <!-- Icon -->
+    <div class="fadeIn first">
+      <img src="/img/man-2-512.png" id="icon" alt="User Icon" />
+    </div>
+
+    <!-- Login Form -->
+    <form action="/api/chat/signup" method='post' autocomplete="off" id="form">
+      <input type="text" id="signup" class="fadeIn second" name="user" placeholder="User Name" required>
+      <input type="text" id="password" class="fadeIn third" name="password" placeholder="Password" value="" required>
+      <input type="text" id="password2" class="fadeIn third" name="password2" placeholder="Password Confirm" value="" required>
+      <input type="submit" class="fadeIn fourth" value="Sign Up">
+    </form>
+    <div id="formFooter">
+      <p class="underlineHover">#MESSAGE#</p>
+    </div>
+  </div>
+  <script>
+  var password = document.getElementById("password")
+  var confirm_password = document.getElementById("password2");
+  var form = document.getElementById("form");
+  
+
+    function validatePassword(){
+        if(password.value != confirm_password.value) {
+            confirm_password.setCustomValidity("Password và Password Confirm phải trùng nhau!");
+        } else {
+            //form.submit();
+            confirm_password.setCustomValidity("");
+        }
+    }
+    password.onchange = validatePassword;
+    confirm_password.onkeyup = validatePassword;
+  </script>
+</div>

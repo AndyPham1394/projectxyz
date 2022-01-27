@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Welcome!</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.png" />
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link href="css/mainpagestyles.css" rel="stylesheet" />
+  </head>
+  <body id="page-top">
+    <!-- Navigation-->
+    <nav
+      class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top"
+      id="mainNav"
+    >
+      <div class="container px-4">
+        <a class="navbar-brand" href="#page-top">WELCOME!</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarResponsive"
+          aria-controls="navbarResponsive"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="#about">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#services">Machine</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#contact">Chat</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#aboutme">About me</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Header-->
+    <header class="bg-success bg-gradient text-white">
+      <div class="container px-4 text-center">
+        <h1 class="fw-bolder">Welcome to my project</h1>
+        <p class="lead">Thanks for visiting!</p>
+        <a class="btn btn-lg btn-light" href="#about">Start</a>
+      </div>
+    </header>
+    <!-- About section-->
+    <section id="about">
+      <div class="container px-4">
+        <div class="row gx-4 justify-content-center">
+          <div class="col-lg-8">
+            <h2>About this page</h2>
+            <p class="lead">
+              This it a personal project made on Nodejs. It's buggy and not
+              fully functional, but also a good start. Here you can find some of
+              the features implemented:
+            </p>
+            <ul>
+              <li>A Camera controller use to control remote camera module</li>
+              <li>
+                A Realtime chat app build on nodejs, express and websocket APIs
+              </li>
+              <li>Simple hardware used to run Local Server with Pi SBC</li>
+              <li>My poor frontend skills</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Services section-->
+    <section class="bg-light" id="services">
+      <div class="container px-4">
+        <div class="row gx-4 justify-content-center">
+          <div class="col-lg-8">
+            <h2>About Machine controller</h2>
+            <p class="lead">
+              Camera controller allowed us to control remote camera module.
+              Streaming and controls are available with websocket and html
+              requests. Here are some informations:
+            </p>
+            <p class="lead">solftwares:</p>
+            <ul>
+              <li>HTTP server as transporter</li>
+              <li>Low delay commands through Websocket</li>
+            </ul>
+            <p class="lead">hardwares:</p>
+            <ul>
+              <li>1 arduino uno module</li>
+              <li>1 esp32cam module</li>
+            </ul>
+            <p class="lead">
+              Cause of my frontend skills this page is recomended to be viewed
+              on a computer, mobile devices may got issue with the display
+              resolution.
+            </p>
+            <a class="btn btn-warning" href="/api/machine/esp32cam"
+              >Go to Machine page >></a
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Contact section-->
+    <section id="contact">
+      <div class="container px-4">
+        <div class="row gx-4 justify-content-center">
+          <div class="col-lg-8">
+            <h2>About Realtime chat</h2>
+            <p class="lead">
+              Realtime chat build on Nodejs, Express, Websocket APIs, and
+              mongoDB Cloud.
+            </p>
+            <p class="lead">
+              This page is recomended to be viewed on a computer, mobile devices
+              may got issue with the display resolution. i ready for
+            </p>
+            <a class="btn btn-success" href="/api/chat">Go to Chat page >></a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="aboutme" class="bg-light">
+      <div class="container px-4">
+        <div class="row gx-4 justify-content-center">
+          <div class="col-lg-8">
+            <h2>About me</h2>
+            <ul>
+              <li>Name: <b>Pham Van Dung</b></li>
+              <li>Born: <b>1994</b></li>
+              <li>I am...</li>
+              <li>Looking for a job</li>
+              <li>A self-taught</li>
+              <li>Alway ready to learn</li>
+            </ul>
+            <p>
+              If you interested in my project, you can contact me on my email :
+              pvdungvnua@gmail.com
+            </p>
+            <p>Phone numbers : &phone; +84 359 066 099</p>
+            <a href="https://github.com/AndyPham1394/project"
+              >Check out this project's source code here >></a
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Footer-->
+    <footer class="py-5 bg-dark">
+      <div class="container px-4">
+        <p class="m-0 text-center text-white">
+          Copyright &copy; Your Website 2021
+        </p>
+      </div>
+    </footer>
+    <!-- Bootstrap core JS-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Core theme JS-->
+    <script src="js/mainpagescripts.js"></script>
+  </body>
+</html>
