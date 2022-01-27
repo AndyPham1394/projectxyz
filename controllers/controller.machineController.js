@@ -101,7 +101,7 @@ function getLocalData() {
       });
   }
 }
-setTimeout(() => {
+setInterval(() => {
   getLocalData();
 }, 20000);
 
