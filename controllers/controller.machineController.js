@@ -136,7 +136,7 @@ machineController.postMachineSubmit = function (req, res, next) {
           // kiem tra neu mat khau dang nhap dung thi xac nhan va luu name, ip cua client vao danh sach
           // kiem tra trong danh sach xem ten thiet bi da ton tai chua, neu chua thi push them vao neu roi thi replace, vi moi thiet bi chi co
           // duy nhat 1 name khong the trung duoc, ip co the trung hoac da thay doi, moi lan may tram dangky se luu lai dia chi ip cua no
-          if (buffer.toString("hex") == serverPassWord) {
+          if (buffer.toString("hex") === serverPassWord) {
             res.send("Dang nhap thanh cong!, passWord chinh xac").end();
             for (pro in req.body) {
               if (pro.toLowerCase() == "name") {
