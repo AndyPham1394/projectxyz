@@ -108,7 +108,7 @@ function getLocalData() {
 }
 setInterval(() => {
   getLocalData();
-}, 20000);
+}, 20000); // 20s
 
 pingMachine(localMachineList);
 setInterval(() => {
