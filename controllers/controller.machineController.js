@@ -9,7 +9,6 @@ const esp32cam = require("./jobs/machine/machine.controller.esp32cam");
 /**
  * router dành riêng cho machine/esp32cam, vì esp32cam có nhi?u ch?c nang nên nó s? du?c thi?t k? riêng 1 router
  */
-esp32cam.start("192.168.1.2");
 machineController.esp32cam = esp32cam.esp32Controller;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,6 +42,10 @@ function loadLocalMachineList(text) {
   return flist;
 }
 localMachineList = loadLocalMachineList();
+var esp32camIp = localMachineList.find((item) => item.name === "esp32cam").ip;
+if (esp32camIp) {
+  esp32cam.start(esp32camIp);
+}
 function updateLocalMachineList(machinelist = []) {
   let thislist = "";
   machinelist.forEach((item) => {
@@ -82,15 +85,17 @@ function pingMachine(machinelist) {
   });
 }
 function getLocalData() {
-  console.log(
-    "so luong local machine hoat dong : " + onlineLocalMachineList.length
-  );
   let esp8266 = onlineLocalMachineList.find((item) => item.name === "esp8266");
   if (esp8266) {
     http
       .get(`http://${esp8266.ip}`, (res) => {
         res.on("data", (chunk) => {
-          console.log(JSON.parse(chunk.toString()));
+          var data = {};
+          try {
+            data = JSON.parse(chunk);
+          } catch (err) {
+            console.log(err);
+          }
         });
         res.on("error", (err) => {
           console.log(err);
