@@ -175,9 +175,13 @@ machineController.getEsp8266 = async function (req, res, next) {
       name: `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`,
     })
     .catch((err) => null);
-  delete data._id;
-  res.set("Content-Type", "application/json");
-  res.send(JSON.stringify(data)).end();
+  if (data) {
+    delete data._id;
+    res.set("Content-Type", "application/json");
+    res.send(JSON.stringify(data)).end();
+  } else {
+    res.send(JSON.stringify({})).end();
+  }
 };
 /**
  * router cho path: '/api/machine/machieesubmit', các localmachine s? báo danh ? dây d? server có th?
