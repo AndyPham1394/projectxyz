@@ -158,7 +158,6 @@ var wscon2;
 var wsevent = new EventEmitter();
 wsevent.on("message", (data) => {
   if (!wscon2) {
-    console.log("create new ws connection");
     let wscon3 = new Websockets.client();
     wscon3.on("connect", (connection) => {
       if (connection.connected) {

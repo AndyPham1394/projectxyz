@@ -93,7 +93,7 @@ function pingMachine(machinelist) {
   });
 }
 /**
- * get data from esp8266 and push into database in 30s loop
+ * get data from esp8266 and push into database in 5min loop
  */
 function getLocalData() {
   let esp8266 = onlineLocalMachineList.find((item) => item.name === "esp8266");
@@ -145,12 +145,12 @@ function getLocalData() {
 }
 setInterval(() => {
   getLocalData();
-}, 30000); // 30s
+}, 5 * 60000); // 5min
 
 pingMachine(localMachineList);
 setInterval(() => {
   pingMachine(localMachineList);
-}, 10000);
+}, 10000); // ping machine
 
 machineController.getMainPage = function (req, res, next) {
   res.render("machinemainpage", {
@@ -165,7 +165,20 @@ machineController.getPPI = function (req, res, next) {
   process.env.machineController = true;
   next();
 };
-machineController.getEsp8266 = function (req, res, next) {};
+/**
+ * return esp8266 raw data in database
+ */
+machineController.getEsp8266 = async function (req, res, next) {
+  let date = new Date();
+  let data = await esp8266Mongo
+    .findOne({
+      name: `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`,
+    })
+    .catch((err) => null);
+  delete data._id;
+  res.set("Content-Type", "application/json");
+  res.send(JSON.stringify(data)).end();
+};
 /**
  * router cho path: '/api/machine/machieesubmit', các localmachine s? báo danh ? dây d? server có th?
  * bi?t du?c ip c?a chúng, localmachine s? c?n ph?i có password d? có th? báo danh thành công, n?u password
