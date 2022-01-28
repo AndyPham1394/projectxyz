@@ -1,11 +1,134 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Machine Manager</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.png" />
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link href="css/mainpagestyles.css" rel="stylesheet" />
+    <style>
+      .chart-container {
+        width: 100%;
+        height: 100%;
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body id="page-top">
+    <!-- Navigation-->
+    <div id="machineNum" hidden></div>
+    <div id="machineName1" hidden></div>
+    <div id="machineName2" hidden></div>
+    <nav
+      class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top"
+      id="mainNav"
+    >
+      <div class="container px-4">
+        <a class="navbar-brand" href="#page-top">WELCOME!</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarResponsive"
+          aria-controls="navbarResponsive"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="#about">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#services">Machine</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#contact">Chat</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#aboutme">About me</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Header-->
+    <header class="bg-success bg-gradient text-white">
+      <div class="container px-4 text-center">
+        <h1 class="fw-bolder">Welcome to Machine Manager</h1>
+        <p class="lead">have fun!</p>
+        <a class="btn btn-lg btn-light" href="#about">Start</a>
+      </div>
+    </header>
+    <!-- esp8266 section-->
+    <section class="bg-light" id="services">
+      <div class="container px-4">
+        <div class="row gx-4 justify-content-center">
+          <div class="col-lg-8">
+            <h2>About Machine controller</h2>
+            <p class="lead">
+              This project used ESP8266 module to get environment data, server
+              get data from ESP8266 and store in database. We can later fetch
+              data from server and show it on web page.
+            </p>
+            <div class="chart-container">
+              <canvas id="chart"></canvas>
+            </div>
+            <button class="btn btn-warning" href="">Go to Camera >></button>
+          </div>
+        </div>
+      </div>
+    </section>
 
-<head>
-<title>#title#</title>
-</head>
-<body>
-    <p>#field2# #field3#</p>
-	<p>cac localmachine dang online la: #field1#</p>
-</body>
+    <!-- Camera section-->
+    <section id="contact">
+      <div class="container px-4">
+        <div class="row gx-4 justify-content-center">
+          <div class="col-lg-8">
+            <h2>Camera Controller</h2>
+            <p class="lead">
+              Camera controller allowed us to control remote camera module.
+              Streaming and controls are available with websocket and html
+              requests. Here are some informations:
+            </p>
+            <p class="lead">solftwares:</p>
+            <ul>
+              <li>HTTP server as transporter</li>
+              <li>Low delay commands through Websocket</li>
+            </ul>
+            <p class="lead">hardwares:</p>
+            <ul>
+              <li>1 arduino uno module</li>
+              <li>1 esp32cam module</li>
+            </ul>
+            <p class="lead">
+              This page is recomended to be viewed on a computer, mobile devices
+              may got issue with the display resolution.
+            </p>
+            <a class="btn btn-success" href="./esp32cam">Go to Camera >></a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Footer-->
+    <footer class="py-5 bg-dark">
+      <div class="container px-4">
+        <p class="m-0 text-center text-white">
+          Copyright &copy; Your Website 2021
+        </p>
+      </div>
+    </footer>
+    <!-- Bootstrap core JS-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
+    <!-- Core theme JS-->
+    <script src="js/machinemainpagescripts.js"></script>
+  </body>
 </html>

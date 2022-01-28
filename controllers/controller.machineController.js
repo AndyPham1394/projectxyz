@@ -6,6 +6,14 @@ const machineController = {};
 const path = require("path");
 const { EventEmitter } = require("stream");
 const esp32cam = require("./jobs/machine/machine.controller.esp32cam");
+const { MongoClient } = require("mongodb");
+var client = new MongoClient(process.env.MONGOURL);
+var mongoconnected = false;
+client.connect(async (ret) => {
+  console.log("machines's mongodb connected!");
+  mongoconnected = true;
+});
+const esp8266Mongo = client.db("machine").collection("esp8266");
 /**
  * router dành riêng cho machine/esp32cam, vì esp32cam có nhi?u ch?c nang nên nó s? du?c thi?t k? riêng 1 router
  */
@@ -84,15 +92,44 @@ function pingMachine(machinelist) {
       .end();
   });
 }
+/**
+ * get data from esp8266 and push into database in 30s loop
+ */
 function getLocalData() {
   let esp8266 = onlineLocalMachineList.find((item) => item.name === "esp8266");
   if (esp8266) {
     http
       .get(`http://${esp8266.ip}`, (res) => {
-        res.on("data", (chunk) => {
+        res.on("data", async (chunk) => {
           var data = {};
           try {
             data = JSON.parse(chunk);
+            let date = new Date();
+            // each document in database store data from esp8266 in one day (24h)
+            // document have specific name as :"date-mouth-year"
+            let timeInString =
+              date.getDate() +
+              "-" +
+              (date.getMonth() + 1) +
+              "-" +
+              date.getFullYear();
+            data.time = date;
+            let getdata = await esp8266Mongo
+              .findOne({ name: timeInString })
+              .catch((err) => null); // check if document exist
+            if (getdata) {
+              await esp8266Mongo
+                .updateOne({ name: timeInString }, { $push: { data: data } })
+                .catch((err) => null);
+            } else {
+              // create new document if not exist
+              await esp8266Mongo
+                .insertOne({
+                  name: timeInString,
+                  data: [data],
+                })
+                .catch((err) => null);
+            }
           } catch (err) {
             console.log(err);
           }
@@ -108,7 +145,7 @@ function getLocalData() {
 }
 setInterval(() => {
   getLocalData();
-}, 20000); // 20s
+}, 30000); // 30s
 
 pingMachine(localMachineList);
 setInterval(() => {
@@ -128,6 +165,7 @@ machineController.getPPI = function (req, res, next) {
   process.env.machineController = true;
   next();
 };
+machineController.getEsp8266 = function (req, res, next) {};
 /**
  * router cho path: '/api/machine/machieesubmit', các localmachine s? báo danh ? dây d? server có th?
  * bi?t du?c ip c?a chúng, localmachine s? c?n ph?i có password d? có th? báo danh thành công, n?u password
