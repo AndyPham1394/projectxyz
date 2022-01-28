@@ -25,8 +25,7 @@ App.engine("temp", function (filePath, options, callback) {
 App.use(express.static("statics"));
 App.use(express.json({ limit: "100kb" }));
 App.set("views", "./views");
-App.set("view engine", "temp"); // xác định template engine logic được dùng, function App.engine có thể được dùng nhiều lần để init nhiều template engine
-// nên phải xác định là ta dùng engine nào để render
+App.set("view engine", "temp");
 App.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "index.html"));
 });

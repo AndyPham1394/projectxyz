@@ -52,7 +52,7 @@ fetch(`${url}/getesp8266data`, {
     let datasheettemp = [];
     let datasheetlux = [];
     esp8266data.forEach((element) => {
-      element.temp = Math.round(element.temp / element.count);
+      element.temp = element.temp / element.count;
       element.hum = Math.round(element.hum / element.count);
       element.lux = element.lux / element.count;
       label.push(element.hour + "h");

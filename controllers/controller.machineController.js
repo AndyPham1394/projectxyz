@@ -8,14 +8,12 @@ const { EventEmitter } = require("stream");
 const esp32cam = require("./jobs/machine/machine.controller.esp32cam");
 const { MongoClient } = require("mongodb");
 var client = new MongoClient(process.env.MONGOURL);
-var mongoconnected = false;
 client.connect(async (ret) => {
   console.log("machines's mongodb connected!");
-  mongoconnected = true;
 });
 const esp8266Mongo = client.db("machine").collection("esp8266");
 /**
- * router dành riêng cho machine/esp32cam, vì esp32cam có nhi?u ch?c nang nên nó s? du?c thi?t k? riêng 1 router
+ * esp32cam page's router and controller
  */
 machineController.esp32cam = esp32cam.esp32Controller;
 
@@ -27,7 +25,7 @@ var serverPassWord = fs
 
 var localMachineList = [];
 /**
- * load list of local machines from list file to applist
+ * return local-machine-list
  */
 function loadLocalMachineList(text) {
   let list = fs
