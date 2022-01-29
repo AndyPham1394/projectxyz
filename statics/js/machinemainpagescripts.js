@@ -14,15 +14,7 @@ function showChart() {
     document.getElementById("showchartbutton").innerHTML = "Show Data Chart";
   }
 }
-var esp8266data = [
-  {
-    hour: 0,
-    temp: 0,
-    hum: 0,
-    lux: 0,
-    count: 0,
-  },
-];
+var esp8266data = [];
 fetch(`${url}/getesp8266data`, {
   method: "GET",
 })
