@@ -47,7 +47,7 @@
             <h2>About Machine monitor</h2>
             <p class="lead">
               This project used ESP8266 module to get environment data with sensors. We can later fetch
-              data from server.
+              data from mongodb database through server.
             </p>
             <div class="chart-container">
               <canvas id="chart" hidden></canvas>
@@ -80,10 +80,6 @@
               <li>1 arduino uno module</li>
               <li>1 esp32cam module</li>
             </ul>
-            <p class="lead">
-              This page is recomended to be viewed on a computer, mobile devices
-              may got issue with the display resolution.
-            </p>
             <a class="btn btn-success" href="./esp32cam">Go to Camera >></a>
           </div>
         </div>
