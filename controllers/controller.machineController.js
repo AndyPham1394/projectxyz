@@ -154,8 +154,8 @@ machineController.getMainPage = function (req, res, next) {
   res.render("machinemainpage", {
     title: "Machine MainPage",
     field1: onlineLocalMachineList.length,
-    field2: onlineLocalMachineList[0].name,
-    field3: onlineLocalMachineList[1].name,
+    field2: onlineLocalMachineList[0] ? onlineLocalMachineList[0].name : "null",
+    field3: onlineLocalMachineList[1] ? onlineLocalMachineList[1].name : "null",
   });
 };
 machineController.getPPI = function (req, res, next) {
