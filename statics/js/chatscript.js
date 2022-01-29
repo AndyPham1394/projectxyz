@@ -35,10 +35,23 @@ const groupInfoBackArrow = document.getElementById("groupInfoBackArrow");
 const userInfoAvatarChangeButton = document.getElementById(
   "userInfoAvatarChangeButton"
 );
+/**
+ * this script is used to handle command from server and display, store message
+ */
+///////////////////////////////////////////////////////////////////////////////
 
-// event cho fileUpload input
+console.log("UserName: " + USER_NAME);
+var UserInfo = {}; // contain User's info
+var onFocus = {}; // object onfocus (when click on an object, their message will be render in the chat box)
+var onCommand = "search"; // command we currently use
+////////////////////////////////////////////////////
+//                    TABLES
+var relateTable = []; // contain list of otherclient who User contact with
+var groupTable = []; // contain list of group that User is in
+
+// events
 fileUpload.addEventListener("change", () => {
-  // upload file size nho hon 15mb
+  // upload file size less than 15mb
   if (fileUpload.files[0].size >= 0 && fileUpload.files[0].size <= 15728640) {
     var data = new FormData(form);
     jQuery.ajax({
@@ -67,7 +80,7 @@ fileUpload.addEventListener("change", () => {
   }
 });
 avatarUpload.addEventListener("change", () => {
-  // upload file size nho hon 15mb
+  // maximum file size less than 8mb
   if (
     avatarUpload.files[0].size >= 0 &&
     avatarUpload.files[0].size <= 8388608
@@ -106,8 +119,7 @@ muteButton.addEventListener("click", () => {
     messageSound2.muted = false;
   }
 });
-// event cho command1Input
-var onCommand = "search";
+
 addUserButton.addEventListener("click", () => {
   searchBox.placeholder = 'Type in User\'s name and "Enter"';
   onCommand = "addUser";
@@ -120,51 +132,6 @@ newGroupButton.addEventListener("click", () => {
   searchBoxContainer.hidden = false;
   searchBox.focus();
 });
-function searchClick() {
-  if (onCommand === "addUser") {
-    let name = searchBox.value;
-    if (name.length > 0) {
-      name = name.trim().replaceAll(/\n/g, "");
-      sendCreate("per", name);
-    }
-    searchBox.value = "";
-  } else if (onCommand === "newGroup") {
-    let name = searchBox.value;
-    if (name.length > 0) {
-      name = name.trim().replaceAll(/\n/g, "");
-      sendCreate("group", name);
-    }
-  }
-  searchBoxContainer.hidden = true;
-}
-function commandInput2KeyDown() {
-  if (onCommand === "invite" && onFocus.type === "group") {
-    let name = commandInput2.value;
-    if (name.length > 0 && name.trim() !== "" && name.length <= 20) {
-      name = name.trim().replaceAll(/\n/g, "");
-      sendInvite([onFocus.name, name]);
-    }
-  } else if (onCommand === "escape" && onFocus.type === "group") {
-    let val = commandInput2.value;
-    if (val.length > 0 && val.trim() !== "" && val.length <= 20) {
-      val = val.trim().replaceAll(/\n/g, "");
-      if (val.match(/ok/gi)) {
-        sendEscape(onFocus.name);
-      }
-    }
-  } else if (onCommand === "delete") {
-    let val = commandInput2.value;
-    if (val.length > 0 && val.trim() !== "" && val.length <= 20) {
-      val = val.trim().replaceAll(/\n/g, "");
-      if (val.match(/ok/gi)) {
-        sendDelete(onFocus.type, onFocus.name);
-      }
-    }
-  }
-  commandInput2.value = "";
-  commandInput2.blur();
-  commandInput2Box.hidden = true;
-}
 searchBox.addEventListener("keyup", function (event) {
   event.preventDefault();
   if (event.keyCode === 13) {
@@ -185,7 +152,6 @@ commandInput2.addEventListener("focusout", function (event) {
   commandInput2.value = "";
   commandInput2Box.hidden = true;
 });
-//ca´c event â´n nu´t
 userInfoButton.addEventListener("click", () => {
   userProfile.hidden = false;
   Box1.hidden = true;
@@ -228,17 +194,69 @@ groupInfoBackArrow.addEventListener("click", () => {
   Box1.hidden = false;
   groupProfile.hidden = true;
 });
+sendButton.addEventListener("click", function () {
+  sendAction();
+});
+commentBox.addEventListener("keyup", function (event) {
+  event.preventDefault();
+  if (event.keyCode === 13) {
+    sendAction();
+  }
+});
 
-// ba´t dâ`u
-console.log("UserName: " + USER_NAME);
-var UserInfo = {};
-var onFocus = {}; // tên d?i tu?ng dang du?c focus (tin nh?n dang hi?n th? trong messageBox)
-
-///////////////////////////////////////////////////////////
-//              TUONG TÁC NGU?I DÙNG
 /**
- * l?y value trong comment box, g?i d?n server, hi?n th? message trong messageBox
- * và dua message vào list message c?a ngu?i dùng ho?c group
+ * check value in search box and execute command (add user, new group, search user)
+ */
+function searchClick() {
+  if (onCommand === "addUser") {
+    let name = searchBox.value;
+    if (name.length > 0) {
+      name = name.trim().replaceAll(/\n/g, "");
+      sendCreate("per", name);
+    }
+    searchBox.value = "";
+  } else if (onCommand === "newGroup") {
+    let name = searchBox.value;
+    if (name.length > 0) {
+      name = name.trim().replaceAll(/\n/g, "");
+      sendCreate("group", name);
+    }
+  }
+  searchBoxContainer.hidden = true;
+}
+/**
+ * check for User confirm in commandInput2 box
+ */
+function commandInput2KeyDown() {
+  if (onCommand === "invite" && onFocus.type === "group") {
+    let name = commandInput2.value;
+    if (name.length > 0 && name.trim() !== "" && name.length <= 20) {
+      name = name.trim().replaceAll(/\n/g, "");
+      sendInvite([onFocus.name, name]);
+    }
+  } else if (onCommand === "escape" && onFocus.type === "group") {
+    let val = commandInput2.value;
+    if (val.length > 0 && val.trim() !== "" && val.length <= 20) {
+      val = val.trim().replaceAll(/\n/g, "");
+      if (val.match(/ok/gi)) {
+        sendEscape(onFocus.name);
+      }
+    }
+  } else if (onCommand === "delete") {
+    let val = commandInput2.value;
+    if (val.length > 0 && val.trim() !== "" && val.length <= 20) {
+      val = val.trim().replaceAll(/\n/g, "");
+      if (val.match(/ok/gi)) {
+        sendDelete(onFocus.type, onFocus.name);
+      }
+    }
+  }
+  commandInput2.value = "";
+  commandInput2.blur();
+  commandInput2Box.hidden = true;
+}
+/**
+ * send value in comment box to server
  */
 function sendAction() {
   commentBox.value = commentBox.value.replaceAll(/\n/g, "");
@@ -260,16 +278,7 @@ function sendAction() {
   commentBox.value = "";
 }
 
-sendButton.addEventListener("click", function () {
-  sendAction();
-});
-commentBox.addEventListener("keyup", function (event) {
-  event.preventDefault();
-  if (event.keyCode === 13) {
-    sendAction();
-  }
-});
-// khi ngu?i dùng ?n vào nút "Show Previous Messages" thì
+// get previous messages by onfocus name
 function previous() {
   let object = relateTable.find((ob) => ob.name === onFocus.name);
   if (object) {
@@ -279,10 +288,8 @@ function previous() {
     sendGet("group", onFocus.name, object.messages[0].id - 1);
   }
 }
-///////////////////////////////////////////////////////////
-//                      HI?N TH?
 /**
- * hi?n th? message trong Message Box
+ * display messages in the chat box
  */
 function displayMessage(content, timeString, theirName, sendOrReceive) {
   let float = "";
@@ -311,6 +318,9 @@ function displayMessage(content, timeString, theirName, sendOrReceive) {
     "</span></div></div>";
   messageBox.appendChild(message).scrollIntoView();
 }
+/**
+ * display image in the chat box
+ */
 function displayImage(imageUrl, timeString, theirName, sendOrReceive) {
   let sr = "receiver";
   if (sendOrReceive) sr = "sender";
@@ -332,14 +342,14 @@ function displayImage(imageUrl, timeString, theirName, sendOrReceive) {
   messageBox.appendChild(message).scrollIntoView();
 }
 /**
- * hi?n th? tin nh?n text c?a mình
+ * stringtifys the time and displays it with messages for our messages
  */
 function displayOurMessage(content, time) {
   let timeString = new Date(time).toLocaleTimeString();
   displayMessage(content, timeString, "", true);
 }
 /**
- * hi?n th? tin nh?n text c?a ngu?i khác
+ * stringtifys the time and displays it with messages for their messages
  */
 function displayTheirMessage(content, time, theirName) {
   let timeString = new Date(time).toLocaleTimeString();
@@ -349,11 +359,9 @@ function clearRelationsBar() {
   relateBar.innerHTML = "";
 }
 /**
- * thêm tag d?i di?n cho ngu?i dùng ho?c group vào relateBar
- * thêm luôn event click vào tag này
+ * add a user or group to the relations bar, append click event for them as well
  */
 function addRelateBar(name, groupOrPer) {
-  // group thì s? có avatar group
   var avatar = "img/man-2-512.png";
   if (!groupOrPer) {
     avatar = "img/group.jfif";
@@ -408,6 +416,9 @@ function addRelateBar(name, groupOrPer) {
   });
   relateBar.appendChild(relate);
 }
+/**
+ * add a new user into groups's member box when they join the group
+ */
 function addGroupInfoBar(name) {
   let avatar = "img/man-2-512.png";
   let relate = document.createElement("div");
@@ -434,17 +445,13 @@ function renderGroupInfoBar(groupname) {
     });
 }
 ////////////////////////////////////////////////////
-//                    CÁC TABLES
-var relateTable = [];
-var groupTable = [];
-////////////////////////////////////////////////////
 //                  CLIENT WORKS
-/**
- * @returns {Array} array các d?i tu?ng trong relateBar
- */
 function getrelateTable() {
   return relateBar.getElementsByClassName("row sideBar-body");
 }
+/**
+ * add name into relate table or group table
+ */
 function addNameToTables(table, name) {
   let ob = {
     name: name,
@@ -453,17 +460,7 @@ function addNameToTables(table, name) {
   table.push(ob);
 }
 /**
- * check và hi?n th? s? unseen message tùy theo tên
- */
-function removeUnseenAlert(who) {
-  let tag = document.getElementById(who + "-relateBar");
-  let dangerLabel = tag.getElementsByClassName("label label-danger");
-  if (dangerLabel[0]) {
-    dangerLabel[0].remove();
-  }
-}
-/**
- * thêm m?t unseenMessage alert vào table c?a user
+ * add unseen alert to the user/group avatar when receiving new message but not seen
  */
 function addUnseenAlert(who) {
   let tag = document.getElementById(who + "-relateBar");
@@ -478,7 +475,17 @@ function addUnseenAlert(who) {
   }
 }
 /**
- * render relateBar s? d?ng relateTable và groupTable
+ * remove alert from the user name
+ */
+function removeUnseenAlert(who) {
+  let tag = document.getElementById(who + "-relateBar");
+  let dangerLabel = tag.getElementsByClassName("label label-danger");
+  if (dangerLabel[0]) {
+    dangerLabel[0].remove();
+  }
+}
+/**
+ * use group/relate table to display their avatar on the side bar
  */
 function renderRelationsBar() {
   clearRelationsBar();
@@ -490,10 +497,10 @@ function renderRelationsBar() {
   });
 }
 /**
- * render message Box
+ * render message Box using the name and type of object we focus on
  */
 function renderMessageBox(name, type) {
-  // clear message box r?i render l?i
+  // rerender message box
   messageBox.innerHTML =
     '<div class="row message-previous">' +
     '<div class="col-sm-12 previous">' +
@@ -531,7 +538,7 @@ function renderMessageBox(name, type) {
         }
       });
     }
-    // render ca unseen va push unseen vao messsages roi xoa unseen
+    // render unseen messages and clear unseen messages list
     if (object.unseenMessages) {
       object.unseenMessages.forEach((mes) => {
         if (mes.content_type === "text") {
@@ -597,11 +604,11 @@ function renderMessageBox(name, type) {
   }
 }
 
-// K?t n?i v?i websocket Server
+// connect to websocket server
 let hostname = document.location.hostname;
 const socket = new WebSocket(`ws://${hostname}:88/api/chat`);
 socket.addEventListener("open", (event) => {
-  console.log("websocket ket noi thanh cong!");
+  console.log("websocket connected!");
   let message = JSON.stringify({
     control: "assign",
     name: USER_NAME,
@@ -609,7 +616,7 @@ socket.addEventListener("open", (event) => {
   });
   socket.send(message);
 });
-// n?u k?t n?i có v?n d? thì reload l?i trang, g?i l?i yêu c?u dang nh?p
+// if websocket is closed or error, reload page
 socket.addEventListener("close", (ev) => {
   setTimeout(() => {
     location.reload();
@@ -620,15 +627,14 @@ socket.addEventListener("error", (ev) => {
     location.reload();
   }, 2000);
 });
-// event khi có message t? Websocket Server
+// handle messages from websocket server in json format
 socket.addEventListener("message", (message) => {
   let frame = JSON.parse(message.data);
   if (frame && frame.hasOwnProperty("control")) {
-    // các control return t? server
     switch (frame.control) {
-      // assign return list relate và group mà ngu?i này có
+      // when we assign into ws_server successfully, server will send back a list of group and relate
+      // we can use those list to send get request to server to get messages by name
       case "assign":
-        // thêm name c?a các group và các relate vào groupTable và relateTable
         if (!assign) {
           delete frame.control;
           UserInfo = frame;
@@ -657,8 +663,7 @@ socket.addEventListener("message", (message) => {
         }
         break;
       case "get":
-        // get return list các message c?a cu?c trò chuy?n riêng ho?c group
-        // luu các thông tin này vào b?ng group ho?c relate tùy theo type
+        // server response to get request, each of get request must specify type and name, server will send back a list of messages(20)
         switch (frame.type) {
           case "group":
             let group = groupTable.find((ob) => ob.name === frame.message.name);
@@ -692,12 +697,12 @@ socket.addEventListener("message", (message) => {
         }
         break;
       case "message":
+        // server send message command to client whenever there is a new message from others to us or just echo back our message
+        // to indicate that server has received our message, this command will be identical to our message command we sent to server
         if (frame.type === "per") {
-          // neu doi tuong nhan message dang duoc focus thi hien thi message
-          // khong thi cho vao unseenmessage list
+          // if message from object we onfocus, display it, otherwise push it to unseenMessages list of that object
           if (frame.name === onFocus.name) {
             if (frame.content_type === "text") {
-              // text thi render text, image thi render image
               displayTheirMessage(frame.message, frame.time, "");
             } else {
               displayImage(
@@ -717,6 +722,7 @@ socket.addEventListener("message", (message) => {
               });
             messageSound.play();
           } else if (frame.name === USER_NAME) {
+            // if this is our message, display image message only, text messages are displayed in messageBox directly when we do sendAction()
             if (frame.content_type === "image") {
               displayImage(
                 `uploadFile/from${USER_NAME}to${frame.destination[0]}-${frame.message}`,
@@ -746,8 +752,6 @@ socket.addEventListener("message", (message) => {
             addUnseenAlert(frame.name);
           }
         } else if (frame.type === "group") {
-          // group messages
-          //dang duoc focus
           if (frame.destination[0] === onFocus.name) {
             if (frame.name !== USER_NAME) {
               if (frame.content_type === "text") {
@@ -798,18 +802,20 @@ socket.addEventListener("message", (message) => {
           }
         }
         break;
-      case "delete": // nh?n delete message thì tìm tên ngu?i n?u là per, tìm tên group n?u là group và xóa trong relatebar và render l?i relatebar
-        console.log("nh?n delete command t? ", frame.name);
-        console.log("d?i tu?ng xóa :", frame.destination[0]);
+      case "delete":
+        // server send delete command to client whenever someone delete a chat with us or a group is deleted
+        console.log("received delete command from ", frame.name);
+        console.log("object be deleted :", frame.destination[0]);
         console.log("type :", frame.type);
         if (frame.type === "per") {
+          // for personal chat
           if (frame.name === USER_NAME) {
-            // neu lenh delete den tu chinh minh, thi xoa ten tu destination[0]
+            // if delete command is sent by us, find object to deleted in destination [0]
+            // and delete it in relateTable, rerender relationBar
             let indexOfDeletedPer = relateTable.findIndex(
               (ob) => ob.name === frame.destination[0]
             );
             if (indexOfDeletedPer !== -1) {
-              // neu tim thay thi xoa
               relateTable.splice(indexOfDeletedPer, 1);
               renderRelationsBar();
               return;
@@ -819,13 +825,13 @@ socket.addEventListener("message", (message) => {
               (ob) => ob.name === frame.name
             );
             if (indexOfDeletedPer !== -1) {
-              // neu tim thay thi xoa
               relateTable.splice(indexOfDeletedPer, 1);
               renderRelationsBar();
               return;
             }
           }
         } else if (frame.type === "group") {
+          // delete group in groupTable and rerender relationBar
           let indexOfDeletedGroup = groupTable.findIndex(
             (ob) => ob.name === frame.destination[0]
           );
@@ -836,9 +842,10 @@ socket.addEventListener("message", (message) => {
           }
         }
         break;
-      case "create": // nh?n create message n?u là t? chính ngu?i dó thì render l?i relatebar, thêm vào relatebar và render l?i relatebar
-        console.log("nh?n create command t? ", frame.name);
-        console.log("d?i tu?ng :", frame.destination[0]);
+      case "create":
+        // add object name into relateTable/groupTable and rerender relationBar
+        console.log("received create command from ", frame.name);
+        console.log("object to be create :", frame.destination[0]);
         console.log("type :", frame.type);
         if (frame.type === "per") {
           if (frame.name === USER_NAME) {
@@ -868,13 +875,16 @@ socket.addEventListener("message", (message) => {
           renderRelationsBar();
           return;
         }
-        break; // n?u là t? ngu?i khác thì hi?n thông báo và relate l?i relatebar
-      case "invite": // n?u là t? nhóm không có trong group list thì thêm vào group list và render l?i relatebar
-        console.log("nh?n invite command t? ", frame.name);
+        break;
+      case "invite":
+        // server send invite command to client whenever someone invite us to a group or our group has new member
+        console.log("received invite command from ", frame.name);
         console.log(
           "group :" + frame.destination[0] + "- user :" + frame.destination[1]
         );
+        // if this command was not sent by us
         if (frame.name !== USER_NAME) {
+          // we don't have this group's name in groupTable means we invited into this group
           if (
             groupTable.findIndex((ob) => ob.name === frame.destination[0]) ===
             -1
@@ -887,17 +897,15 @@ socket.addEventListener("message", (message) => {
             renderRelationsBar();
             sendGet("group", frame.destination[0], -1);
             console.log(
-              "da them :" + frame.destination[0] + " vao groupTable!"
-            );
-            console.log(
-              "ban duoc moi vao group : ",
-              frame.destination[0] + " boi : " + frame.name
+              "you have been invited in to group : ",
+              frame.destination[0] + " by : " + frame.name
             );
           } else {
+            // if we have this group's name in groupTable, then there are new member invited to this group
             console.log(
               "group " +
                 frame.destination[0] +
-                " da them thanh vien moi : " +
+                " added new member: " +
                 frame.destination[1]
             );
             groupTable
@@ -905,25 +913,28 @@ socket.addEventListener("message", (message) => {
               .members.push(frame.destination[1]);
           }
         } else {
-          // c?p nh?t thành viên m?i vào group's member
+          // if this command sent by us, add new member to group members list
           let gr = groupTable.find((ob) => ob.name === frame.destination[0]);
           if (gr) gr.members.push(frame.destination[1]);
         }
-        break; // n?u là t? nhóm có trong group list thì c?p nh?t l?i group members, không c?n render l?i
-      case "escape": // n?u t? chính ngu?i dó thì xóa tên group trong group list
-        console.log("nh?n escape command t? ", frame.name);
-        console.log("group :" + frame.destination[0] + "- user :" + frame.name);
+        break;
+      case "escape":
+        // server send escape command to client whenever someone leave a group
+        console.log("received escape command from ", frame.name);
+        console.log("group :" + frame.destination[0]);
         if (frame.name === USER_NAME) {
+          // if our command, remove this group from groupTable rerender relationBar
           let indexOfEscapeGroup = groupTable.findIndex(
             (ob) => ob.name === frame.destination[0]
           );
           if (indexOfEscapeGroup !== -1) {
             groupTable.splice(indexOfEscapeGroup, 1);
             renderRelationsBar();
-            console.log("dã xóa :" + frame.destination[0]);
+            console.log("deleted :" + frame.destination[0]);
             return;
           }
         } else {
+          // if someone else's command then remove this member from group's member
           let findGroup = groupTable.find((ob) => ob.name === frame.name);
           if (findGroup !== undefined) {
             let indexofEscapeMember = findGroup.members.findIndex(
@@ -935,8 +946,10 @@ socket.addEventListener("message", (message) => {
             return;
           }
         }
-        break; // n?u không ph?i t? ngu?i dó thì c?p nh?t l?i group members
+        break;
       case "getavatar":
+        // server send back list of users and their avatar name when we send getavatar command
+        // add them into relateTable and render relationBar
         if (frame.hasOwnProperty("avatarlist")) {
           frame.avatarlist.forEach((ob) => {
             relateTable.find((x) => x.name === ob.name).avatar = ob.avatar;
@@ -945,13 +958,10 @@ socket.addEventListener("message", (message) => {
         }
         break;
     }
-  } else {
-    // console.log("message khong hop le");
-    // console.log(Object.entries(frame));
   }
 });
 /////////////////////////////////////////////
-//            TUONG TÁC V?I SERVER
+//            COMMAND WE SEND TO SERVER
 function sendGet(type, dest, fromNumber) {
   let mes = JSON.stringify({
     control: "get",

@@ -1,7 +1,6 @@
 function myfunc() {
   window.stop();
 }
-console.log("loadscript!!");
 const streamButton = document.getElementById("toggle-stream");
 const setdef = document.getElementById("setImage");
 const setqua = document.getElementById("setquality");
@@ -29,7 +28,7 @@ function closeStream() {
 }
 var socket = new WebSocket(`ws://${baseHost}:81`);
 socket.addEventListener("open", (event) => {
-  console.log("websocket ket noi thanh cong!");
+  console.log("websocket connected!");
 });
 setdef.onclick = () => {
   socket.send("batden\n");
@@ -49,7 +48,7 @@ setmir.onmousedown = () => {
 };
 
 streamButton.onclick = () => {
-  // neu innerHTML dang la Stop-stream thi stopStream, khong thi startStream
+  // stop/start stream data from server
   let streamEnabled = streamButton.innerHTML === "Stop Stream" ? true : false;
   if (streamEnabled) {
     if (socket.OPEN) {
