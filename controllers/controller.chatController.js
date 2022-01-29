@@ -33,9 +33,8 @@ const cp = require("child_process");
 var websockServer = cp.fork(
   `${__dirname}/jobs/chat/chat.websockServerRouter.js`
 );
-// nhận online list từ websockserver
 var onlineTable = [];
-// có message logout từ websock server thì remove name khỏi online table
+// websocket server inform when user disconnect
 websockServer.on("message", (mess) => {
   if (Object.hasOwn(mess, "logout")) {
     let index = onlineTable.indexOf(mess.logout);
@@ -63,8 +62,6 @@ controller.getMainPage = (req, res, next) => {
 };
 /**
  * handle login post request, validate password
- * return trang đăng nhập thành công cho client
- * nếu thành công thì return data trong user_table của user đó (chứa thông tin user, tên các session mà user đã tham gia)
  */
 controller.handleLogin = async (req, res, next) => {
   if (Object.hasOwn(req.body, "user") && Object.hasOwn(req.body, "password")) {
@@ -75,9 +72,8 @@ controller.handleLogin = async (req, res, next) => {
       req.body.password.length <= 20
     ) {
       if (onlineTable.includes(req.body.user)) {
-        // nếu đã online rồi thì không cho đăng nhập nữa
         res.render("chatLogIn", {
-          MESSAGE: "Đăng nhập thất bại, xin hãy thử lại bằng tài khoản khác.",
+          MESSAGE: "Login failed! please use another account.",
         });
       } else {
         let x = await getUserPassWord(req.body.user);
@@ -107,36 +103,36 @@ controller.handleLogin = async (req, res, next) => {
                 onlineTable.push(req.body.user);
               } else {
                 res.render("chatLogIn", {
-                  MESSAGE: "Đăng nhập không thành công! Xin hãy thử lại.",
-                }); // length của username và mật khẩu không đạt yêu cầu
+                  MESSAGE: "Login failed!, try again!",
+                });
               }
             }
           );
         } else {
           res.render("chatLogIn", {
-            MESSAGE: "User name không tồn tại! Xin hãy thử lại.",
-          }); // user không tồn tại
+            MESSAGE: "User name does not exist!",
+          });
         }
       }
     } else {
       res.render("chatLogIn", {
-        MESSAGE: "Đăng nhập không thành công! Xin hãy thử lại.",
-      }); // length của username và mật khẩu không đạt yêu cầu
+        MESSAGE: "Login failed!, try again!",
+      });
     }
   } else {
     res.render("chatLogIn", {
-      MESSAGE: "Hãy điền đầy đủ User name và Password!",
-    }); // request phải có username và password
+      MESSAGE: "User name and Password required!",
+    });
   }
 };
 /**
- * handle post media, nhận các media file mà user post lên, chứa chúng vào bộ nhớ
+ * handle post image, store avatar file to uploadFile folder
  */
 controller.handlePostMedia = (req, res, next) => {
   if (!req.files || !Object.hasOwn(req.files.file, "name")) {
-    // res.status(400).send("no file uploaded!").end();
+    //res.status(400).send("no file uploaded!").end();
   } else {
-    // nhận được file thì lưu lại và đánh dấu file đó from who to who để lưu
+    // name file as format : 'from'+fromwho+towho+filename
     fs.open(
       `./statics/uploadFile/from${req.body.from}to${req.body.to}-${req.files.file.name}`,
       "w+",
@@ -151,13 +147,13 @@ controller.handlePostMedia = (req, res, next) => {
   }
 };
 /**
- * handle post avatar, chứa chúng vào bộ nhớ
+ * handle post avatar, store avatar file to uploadAvatar folder
  */
 controller.handlePostAvatar = (req, res, next) => {
   if (!req.files || !Object.hasOwn(req.files.file, "name")) {
-    // res.status(400).send("no file uploaded!").end();
+    //res.status(400).send("no file uploaded!").end();
   } else {
-    // nhận được file thì lưu lại và đánh dấu file đó from who to who để lưu
+    // name file as format : 'avatar'+username+filename
     fs.open(
       `./statics/uploadAvatar/avatar${req.body.from}${req.files.file.name}`,
       "w+",
@@ -176,8 +172,7 @@ controller.handlePostAvatar = (req, res, next) => {
  */
 controller.handleGetMedia = (req, res, next) => {};
 /**
- * handle post newuser request, nhận yêu cầu tạo user mới của client, nếu tạo thành công thì lưu new user vào user_table
- * và thông báo thành công cho khách, return trang đăng nhập thành công cho client
+ * handle post newuser request, check and create new user in database
  */
 controller.handleNewUser = async (req, res, next) => {
   if (Object.hasOwn(req.body, "user") && Object.hasOwn(req.body, "password")) {
@@ -189,8 +184,9 @@ controller.handleNewUser = async (req, res, next) => {
       req.body.user.match(/^[A-Za-z0-9]+$/i) &&
       req.body.password.match(/^[A-Za-z0-9]+$/i)
     ) {
-      let x = await getUserPassWord(req.body.user); // check xem username da ton tai chua
+      let x = await getUserPassWord(req.body.user); // check if User name already exists
       if (!x) {
+        // create hash password
         crypto.pbkdf2(
           req.body.password,
           "mackhenhatdoi",
@@ -208,7 +204,7 @@ controller.handleNewUser = async (req, res, next) => {
                 password: result.toString("hex"),
               })
             ) {
-              // them username va password vao csdl
+              // add User name and password to database
               await Model.createNewUser(req.body.user);
               var secret = Math.random().toString(16).slice(2);
               res.render("chat", {
@@ -221,25 +217,25 @@ controller.handleNewUser = async (req, res, next) => {
               });
             } else {
               res.render("chatSignUp", {
-                MESSAGE: "Không thể tạo tài khoản mới! xin hãy thử lại.",
-              }); // truong hop khong the tao new user
+                MESSAGE: "Sign Up faled! please try again.",
+              });
             }
           }
         );
       } else {
         res.render("chatSignUp", {
-          MESSAGE: "Tên tài khoản này đã tồn tại! xin hãy thử lại.",
-        }); // truong hop userName da ton tai
+          MESSAGE: "User name already exist!",
+        });
       }
     } else {
       res.render("chatSignUp", {
-        MESSAGE: "Tên tài khoản hoặc mật khẩu không hợp lệ! xin hãy thử lại.",
-      }); // neu do dai username va mat khau hoac pattern cua chung khong hop le
+        MESSAGE: "User name or Password don't match requirement!",
+      }); // if length of username or password not match requirement or their pattern is not match
     }
   } else {
     res.render("chatSignUp", {
-      MESSAGE: "Xin hãy điền đầy đử Tên tài khoản và Password.",
-    }); // phai co username va password
+      MESSAGE: "User name and Password required!",
+    });
   }
 };
 module.exports = controller;

@@ -64,20 +64,20 @@ function updateLocalMachineList(machinelist = []) {
 
 var onlineLocalMachineList = [];
 var pingEvent = new EventEmitter();
-// ping ok thì check d? push name vào list n?u chua có trong list
+
 pingEvent.on("pingok", (item) => {
   if (onlineLocalMachineList.indexOf(item) == -1) {
     onlineLocalMachineList.push(item);
   }
 });
-// ping false thì lo?i b? name trong list n?u dang ? trong online list
+
 pingEvent.on("pingfalse", (item) => {
   let position = onlineLocalMachineList.indexOf(item);
   if (position != -1) {
     onlineLocalMachineList.splice(position, 1);
   }
 });
-// g?i ping request d?n các client machine, n?u chúng nh?n du?c request và tr? l?i t?c là chúng có online
+// send http get to machine
 function pingMachine(machinelist) {
   machinelist.forEach((item) => {
     http
@@ -145,10 +145,11 @@ setInterval(() => {
   getLocalData();
 }, 5 * 60000); // 5min
 
+// ping machines in local-machine-list every 15s
 pingMachine(localMachineList);
 setInterval(() => {
   pingMachine(localMachineList);
-}, 10000); // ping machine
+}, 15000); // ping machine
 
 machineController.getMainPage = function (req, res, next) {
   res.render("machinemainpage", {
@@ -182,42 +183,31 @@ machineController.getEsp8266 = async function (req, res, next) {
   }
 };
 /**
- * router cho path: '/api/machine/machieesubmit', các localmachine s? báo danh ? dây d? server có th?
- * bi?t du?c ip c?a chúng, localmachine s? c?n ph?i có password d? có th? báo danh thành công, n?u password
- * dúng thì chúng s? du?c luu tên và ip vào danh sách d? theo dõi thu?ng xuyên, server s? g?i các ping d?n các
- * localmachine d? ki?m tra có dang online không, thông tin này d? ph?c v? cho trang ch? /machine, ch?a thông tin các
- * localmachine dang online
+ * local machine inform server about their ip address by http post request, name and password is required
  */
 machineController.postMachineSubmit = function (req, res, next) {
   let timthaypass = false;
-  // loop qua cac properties trong req.body
   for (pro in req.body) {
-    // neu tim thay 'password' thi lay value cua no => hash => so sanh voi serverPass
-    // neu thanh cong thi luu ten cua thiet bi, khong thi thoi
     if (pro.toLowerCase() == "password") {
       timthaypass = true;
       let value = req.body[`${pro}`];
-      // console.log(value);
-      // xac dinh do dai passWord khong qua 20 ky tu
       if (value.length < 20) {
         // hash
         crypto.pbkdf2(value, "dung", 10000, 32, "sha256", (err, buffer) => {
           if (err) {
             console.log(err);
-            res.send("khong the xu ly password").end();
+            res.send("err").end();
             return;
           }
-          // kiem tra neu mat khau dang nhap dung thi xac nhan va luu name, ip cua client vao danh sach
-          // kiem tra trong danh sach xem ten thiet bi da ton tai chua, neu chua thi push them vao neu roi thi replace, vi moi thiet bi chi co
-          // duy nhat 1 name khong the trung duoc, ip co the trung hoac da thay doi, moi lan may tram dangky se luu lai dia chi ip cua no
+          // if password is match, then update local machine list and store their ip address in local-machine-list.txt
           if (buffer.toString("hex") === serverPassWord) {
-            res.send("Dang nhap thanh cong!, passWord chinh xac").end();
+            res.send("success!").end();
             for (pro in req.body) {
               if (pro.toLowerCase() == "name") {
                 let val = req.body[`${pro}`];
                 let obj = {
                   name: val,
-                  ip: req.ip.replaceAll(/.*:/g, ""),
+                  ip: req.ip.replaceAll(/.*:/g, ""), // trim ip address
                 };
                 let trung = false;
                 localMachineList.forEach((ob) => {
@@ -227,31 +217,28 @@ machineController.postMachineSubmit = function (req, res, next) {
                   }
                 });
                 if (!trung) {
-                  // push danh sach va update file localmachinelist.txt
+                  // update file localmachinelist.txt
                   localMachineList.push(obj);
                 }
                 updateLocalMachineList(localMachineList);
               }
             }
           } else {
-            res
-              .send("Dang nhap khong thanh cong!, passWord khong chinh xac")
-              .end();
+            res.send("password not match").end();
           }
         });
       } else {
-        res.send("passWord khong hop le!").end();
+        res.send("err").end();
       }
       break;
     }
   }
-  // den day tuc la khong tim thay data
-  if (timthaypass == false) res.send("data khong chinh xac!").end();
+  // we get there if data not math requirements
+  if (timthaypass == false) res.send("data not correct").end();
 };
 
 /**
  * return online-machine-list
- *
  */
 machineController.getOnlineMachine = (req, res, next) => {
   let object = {
@@ -259,7 +246,7 @@ machineController.getOnlineMachine = (req, res, next) => {
   };
   res
     .send(
-      "hien co :" +
+      "Online machine :" +
         object.soluong +
         " machine dang online - " +
         onlineLocalMachineList.toString()

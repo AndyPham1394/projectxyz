@@ -1,7 +1,8 @@
 /**
- * chuyên dùng cho esp32cam, gồm có gửi các controls đến cam để setting,
- * truy cập /client để get stream data, thiết lập websocket connection để điều khiển
- * led và xoay cam
+ * get stream data from esp32cam by http get and send to multi client by eventEmitter
+ * create a websocket connection to esp32cam to control rotation
+ * create a websocket for client to send command through this server to esp32cam
+ * this server act like transporter between client and esp32cam, client send command to esp32cam through this server
  */
 const express = require("express");
 const esp = express.Router();
@@ -10,27 +11,16 @@ const http = require("http");
 const { EventEmitter } = require("stream");
 const Websockets = require("websocket");
 var cameraip = "";
-/**
- * bắt đầu mornotoring camera bằng cách pass ip vào
- * @param {*} ip
- */
-
-/**
- * chuyển control request của client đến localmachine
- */
-// static file cho /machine/esp32cam
-// use body parser
 esp.use(express.urlencoded({ extended: true }));
 esp.use(express.static("statics"));
 esp.get("/", (req, res) => {
   if (cameraip != "") {
-    //res.sendFile(path.join(__dirname, "../../../views/esp32cam.html"));
     res.render("esp32cam_mainpage");
   } else {
-    res.send("cameraip chua xac dinh").end();
+    res.send("cameraip not available").end();
   }
 });
-
+// command setting from client to esp32cam through server ( disabled )
 esp.get("/control", (req, res) => {
   if (cameraip != "") {
     let url =
@@ -50,13 +40,14 @@ esp.get("/control", (req, res) => {
   }
 });
 
-// mỗi lần có client kết nối đến /client thì server bắt đầu get stream data từ camera
-// emit data này để tất cả các client sau đó có thể lấy được, nếu không còn client lấy data
-// thì server ngắt kết nối stream data với camera
+// maintain a client list, when a client connect to websocket, add 1 to state
+// -1 when client disconnect
+// server only get data from esp32cam, when state > 0, that data will be emit by 'stream-data' event
+// every client connect to this server can catch this event to get stream data
 let x = new EventEmitter(); // tao eventEmitter 'x'
 var htt;
 var state = 0;
-// dùng websocket để xác định client có còn kết nối hay không sẽ chính xác hơn
+// client events
 x.on("client-counter", (data) => {
   if (state == 0 && data == 1) {
     state += data;
@@ -78,7 +69,7 @@ x.on("client-counter", (data) => {
     });
 
     htt.end();
-    // neu state la 1 va data la -1 thi ngat ket noi voi server
+    // disconnect esp32cam when there is no client connect to this server
   } else if (state == 1 && data == -1) {
     state += data;
     if (htt) htt.destroy();
@@ -90,7 +81,8 @@ x.on("client-counter", (data) => {
   }
 });
 /**
- * get stream data tại đây
+ * client access /client to get stream data from esp32cam
+ * this camera module output data in multipart/x-mixed-replace format
  */
 esp.get("/client", (req, res) => {
   res.statusCode = 200;
@@ -110,6 +102,7 @@ esp.get("/client", (req, res) => {
   });
 });
 
+// manualy set camera ip
 esp.post("/addCameraIp", (req, res) => {
   if (
     Object.hasOwn(req.body, "ip") &&
@@ -129,11 +122,7 @@ esp.post("/addCameraIp", (req, res) => {
 });
 
 /**
- * tạo kết nối websocket với client machine khi có kết nối websocket từ client thì
- * server cũng sẽ tạo 1 kết nối websocket với machine
- */
-/**
- * tạo server websocket
+ * create websocket connection to esp32cam to control rotation
  */
 const server = http.createServer((req, res) => {
   res.setHeader("content-type", "text/plain");
@@ -147,13 +136,22 @@ server.listen(process.env.MACHINEWEBSOCKETPORT, () => {
   );
 });
 /**
- * kết nối websocket, mỗi lần client có kết nối websocket đến server:81 thì
- * server sẽ tạo 1 kết nối websocket với localmachine:83 để chuyển tiếp message của
- * client đến localmachine
+ * websocket transport between client and esp32cam
  */
 const wscon = new Websockets.server({
   httpServer: server,
 });
+wscon.on("request", (request) => {
+  var client = request.accept();
+  x.emit("client-counter", 1);
+  client.on("message", (data) => {
+    wsevent.emit("message", data.utf8Data);
+  });
+  client.on("close", () => {
+    x.emit("client-counter", -1);
+  });
+});
+
 var wscon2;
 var wsevent = new EventEmitter();
 wsevent.on("message", (data) => {
@@ -174,17 +172,6 @@ wsevent.on("message", (data) => {
   } else {
     wscon2.sendUTF(data);
   }
-});
-
-wscon.on("request", (request) => {
-  var client = request.accept();
-  x.emit("client-counter", 1);
-  client.on("message", (data) => {
-    wsevent.emit("message", data.utf8Data);
-  });
-  client.on("close", () => {
-    x.emit("client-counter", -1);
-  });
 });
 
 //////////////////////////////////////////////////////////

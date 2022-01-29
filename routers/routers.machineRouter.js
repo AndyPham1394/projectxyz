@@ -8,7 +8,7 @@ machineRouter.get("/", machineController.getMainPage);
 machineRouter.post("/machinesubmit", machineController.postMachineSubmit);
 // return esp8266 data
 machineRouter.get("/getesp8266data", machineController.getEsp8266);
-// router dành riêng cho esp32cam
+// router for esp32cam
 machineRouter.use("/esp32cam", machineController.esp32cam);
 
 // unhandle request
