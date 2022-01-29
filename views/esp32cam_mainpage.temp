@@ -36,14 +36,15 @@ body {
   -webkit-animation-fill-mode: both;
   animation-fill-mode: both;
 }
+
 </style>
 </head>
 
 
 <body onunload = "myfunc()">
 <div class="wrapper fadeInDown">
-	<div id = "div1" >	
-		<img id="stream" src=""class="img-fluid" alt="Stream">
+	<div id = "div1">	
+		<img id="stream" src=""class="img-fluid" alt="Stream" >
 	</div>
 	<div class="btn-group" role="group" aria-label="Basic example">
 		<button id="toggle-stream" class="btn btn-primary" type="button">Start Stream</button>
