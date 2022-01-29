@@ -32,7 +32,7 @@
 
     function validatePassword(){
         if(password.value != confirm_password.value) {
-            confirm_password.setCustomValidity("Password và Password Confirm phải trùng nhau!");
+            confirm_password.setCustomValidity("Password and Password Confirm must identical!");
         } else {
             //form.submit();
             confirm_password.setCustomValidity("");
