@@ -75,7 +75,7 @@ fetch(`${url}/getesp8266data`, {
         labels: label,
         datasets: [
           {
-            label: "light intensity (Lux)",
+            label: "Light intensity (Lux)",
             data: datasheetlux,
             backgroundColor: ["rgba(0, 137, 132, .2)"],
             borderColor: ["rgba(0, 10, 130, .7)"],
