@@ -53,7 +53,6 @@ body {
 		<button id="setmirror" type="button" class="btn btn-success">TURN LEFT</button>
 		<button id="setgain" type="button" class="btn btn-success">TURN RIGHT</button>
 	</div>
-
 </div>
 	<script src = '/js/esp32camscript.js'>
 	</script>
