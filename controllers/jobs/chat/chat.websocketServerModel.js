@@ -1,5 +1,6 @@
-// module dataModel của websocketServer, làm nhiệm vụ kết nối với mongoDBserver, CRUD data với server
-// để trao đổi data qua lại giữa controller và DBserver
+/**
+ * this module use mongodb
+ */
 const { MongoClient } = require("mongodb");
 const { EventEmitter } = require("stream");
 var client = new MongoClient(process.env.MONGOURL);
@@ -10,7 +11,7 @@ const User = client.db("chat").collection("Users");
 const Group = client.db("chat").collection("Groups");
 const Per = client.db("chat").collection("Pers");
 /**
- * các functions tạo và chỉnh sửa
+ * functions
  * + createNewUser
  * + userModifier
  * + groupModifier
@@ -30,7 +31,7 @@ const Per = client.db("chat").collection("Pers");
  */
 
 /**
- * insert newUser profile vào Users collection => _id/null
+ * insert newUser profile into Users collection => _id/null
  */
 async function createNewUser(uName) {
   let search = await User.findOne({ name: uName });
@@ -56,7 +57,7 @@ async function createNewUser(uName) {
   }
 }
 /**
- * chỉnh sửa User profile
+ * modify User profile
  */
 async function userModifier(uName, mod) {
   let search = await User.findOneAndUpdate({ name: uName }, mod)
@@ -73,7 +74,7 @@ async function userModifier(uName, mod) {
   }
 }
 /**
- * chỉnh sửa Group profile
+ * modify Group profile
  */
 async function groupModifier(gName, mod) {
   let search = await Group.findOneAndUpdate({ name: gName }, mod)
@@ -90,7 +91,7 @@ async function groupModifier(gName, mod) {
   }
 }
 /**
- * cập nhật key trong doc và return new key cho per
+ * get key and increase key for Per-to-Per chat
  */
 async function autoIdPer(name1, name2) {
   let res = await Per.findOneAndUpdate(
@@ -109,7 +110,7 @@ async function autoIdPer(name1, name2) {
   }
 }
 /**
- * cập nhật key trong doc và return new key cho group
+ * get key and increase key for Group chat
  */
 async function autoIdGroup(gname) {
   let res = await Group.findOneAndUpdate({ name: gname }, { $inc: { key: 1 } });
@@ -120,12 +121,10 @@ async function autoIdGroup(gname) {
   }
 }
 /**
- * handle cho 'assign' call,
+ * handle for 'assign' call,
  * return User profile/null
  */
 async function assignHandle(frame) {
-  // push thêm date vào assign array trong Users và return data
-  // await User;
   let res = await User.findOneAndUpdate(
     { name: frame.name },
     { $push: { assign: frame.time } }
@@ -138,11 +137,10 @@ async function assignHandle(frame) {
   return null;
 }
 /**
- * handle cho 'get' call, return document/null
+ * handle for 'get' call, return document/null
  */
 async function getHandle(frame) {
   if (frame.type.match(/^(per)$/i)) {
-    // tìm per thì tìm doc nào có members là tên chủ và tên khách và return 20 messages tùy vị trí bắt đầu
     let from = frame.from;
     let mesnum = 20;
     if (frame.from === -1) {
@@ -179,8 +177,6 @@ async function getHandle(frame) {
     }
     return null;
   } else if (frame.type.match(/^(group)$/i)) {
-    // tìm doc nào có name giống document
-    // use aggregatin get 20 messages from messages array from mongoDB
     let from = frame.from;
     let mesnum = 20;
     if (frame.from === -1) {
@@ -218,11 +214,10 @@ async function getHandle(frame) {
   return null;
 }
 /**
- * handle cho 'message' call, lưu message vào doc tùy theo frame.type
+ * handle for 'message' call
  */
 async function messageHandle(frame) {
   if (frame.type.match(/^(per)$/i)) {
-    // push message vào
     let res = await Per.updateOne(
       {
         $and: [
@@ -273,17 +268,15 @@ async function messageHandle(frame) {
   return false;
 }
 /**
- * handle cho create call, thêm một group/per document vào collection,
+ * handle for create call
  */
 async function createHandle(frame) {
   if (frame.type.match(/^(per)$/i)) {
-    // người được nhắn tin đến phải tồn tại
     let validate = await User.findOne({ name: frame.destination[0] }).catch(
       (err) => null
     );
 
     if (!validate) return false;
-    // kiểm tra nếu per này đã tồn tại hay chưa, nếu chưa thì tiếp tục
     let res = await Per.findOne({
       $and: [
         { members: { $elemMatch: { $eq: frame.name } } },
@@ -291,15 +284,12 @@ async function createHandle(frame) {
       ],
     }).catch((err) => null);
     if (!res) {
-      // add Per to csdl
       let ret = await Per.insertOne({
         members: [frame.name, frame.destination[0]],
         key: 0,
         messages: [],
       }).catch((err) => null);
       if (ret !== null) {
-        // nếu insertOne không err => push thêm tên vào relate profile của 2 User
-        // và return true
         await User.updateOne(
           { name: frame.name },
           { $addToSet: { relate: frame.destination[0] } }
@@ -342,27 +332,22 @@ async function createHandle(frame) {
   }
 }
 /**
- * handle cho delete call, xóa doc trong bảng Groups hoặc Pers
+ * handle for delete call return list of members in the group
  */
 async function deleteHandle(frame) {
-  // type == per
   if (frame.type.match(/^(per)$/i)) {
-    // xóa per
     let res = await Per.deleteOne({
       $and: [
         { members: { $elemMatch: { $eq: frame.name } } },
         { members: { $elemMatch: { $eq: frame.destination[0] } } },
       ],
     }).catch((err) => null);
-    // xóa tên trong relate của client
     if (!res) {
       return false;
     } else if (res.deletedCount) {
-      // nếu xóa thành công
       if (res.deleteCount === 0) {
         return false;
       } else {
-        // xoá tên trong relateList của 2 người
         await User.findOne({ name: frame.name }).catch((err) => null);
         let ret = await User.updateOne(
           { name: frame.name },
@@ -381,12 +366,10 @@ async function deleteHandle(frame) {
     }
     return false;
   } else if (frame.type.match(/^(group)$/i)) {
-    // find group
     let validate = await Group.findOne({ name: frame.destination[0] }).catch(
       (err) => null
     );
     if (validate) {
-      // nếu là thành viên đầu tiên mới có thể xóa group được
       if (validate.members[0] === frame.name) {
         let res = await Group.deleteOne({ name: frame.destination[0] }).catch(
           (err) => {
@@ -399,7 +382,6 @@ async function deleteHandle(frame) {
           if (res.deleteCount === 0) {
             return false;
           } else {
-            // xóa tên của group trong User profile của các thành viên trong group
             validate.members.forEach(async (member) => {
               await User.updateOne(
                 { name: member },
@@ -419,20 +401,17 @@ async function deleteHandle(frame) {
   }
 }
 /**
- * mời một client vào group, người mời phải là thành viên của group
+ * handle for invite call return group's members
  */
 async function inviteHandle(frame) {
-  // nếu người được mời có tồn tại
   let findUser = await User.findOne({ name: frame.destination[1] }).catch(
     (err) => null
   );
   if (findUser) {
-    // nếu group có tồn tại
     let group = await Group.findOne({ name: frame.destination[0] }).catch(
       (err) => null
     );
     if (group) {
-      // người mời phải trong group's members mới có thể mời người khác được
       if (group.members.includes(frame.name)) {
         let res = await Group.updateOne(
           { name: frame.destination[0] },
@@ -440,7 +419,6 @@ async function inviteHandle(frame) {
         ).catch((err) => null);
         if (res) {
           if (res.modifiedCount === 1) {
-            // nếu thêm thành công
             await User.updateOne(
               { name: frame.destination[1] },
               { $addToSet: { groups: frame.destination[0] } }
@@ -458,7 +436,7 @@ async function inviteHandle(frame) {
   return false;
 }
 /**
- * handle cho escape, return true/false
+ * handle for escape, return members of the group/false
  */
 async function escapeHandle(frame) {
   var validate = await Group.findOne({ name: frame.destination[0] }).catch(
@@ -543,29 +521,26 @@ async function getAvatarHandle(frame) {
 }
 
 const model = new EventEmitter();
-/**
- * handle các call từ controller
- */
 model.call = async (commandNumber, frame) => {
   switch (commandNumber) {
     case 1:
-      return await assignHandle(frame); // return User profile
+      return await assignHandle(frame);
     case 2:
-      return await getHandle(frame); // return message array
+      return await getHandle(frame);
     case 3:
-      return await messageHandle(frame); // return true/false
+      return await messageHandle(frame);
     case 4:
-      return await deleteHandle(frame); // return true/false
+      return await deleteHandle(frame);
     case 5:
-      return await createHandle(frame); // return true/ false
+      return await createHandle(frame);
     case 6:
-      return await inviteHandle(frame); // return true/false
+      return await inviteHandle(frame);
     case 7:
-      return await escapeHandle(frame); // return true/false
+      return await escapeHandle(frame);
     case 8:
-      return await addAvatarHandle(frame); // return true/false
+      return await addAvatarHandle(frame);
     case 9:
-      return await getAvatarHandle(frame); // return true/false
+      return await getAvatarHandle(frame);
     default:
       break;
   }

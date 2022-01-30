@@ -1,3 +1,9 @@
+/**
+ * monitor online machine, if machine is offline, remove from online-machine-list
+ * send ping to machine every 15s to check if machine is online
+ * get data from local machine and push into database in 5min loop
+ * handle getdata request from client
+ */
 const express = require("express");
 const fs = require("fs");
 const crypto = require("crypto");

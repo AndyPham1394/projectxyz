@@ -1,33 +1,34 @@
 const websocket = require("websocket");
-/////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * newebsock class thêm một số method : handleClient, handleReject
+ * additional functions and tables for websocket server
+ * used to monitor client connections, handle request by path
+ * validate client ip and name
  */
 class newwebsock extends websocket.server {
   constructor(serverConfig) {
     super(serverConfig);
-    // các tables
+    // tables
     /**
-     * chứa các ip được phép truy cập vào websockServer
+     * contain ips allowed to connect to websockServer
      */
     this.allowedIpTable = new Array();
 
     /**
-     * sau khi đăng nhập thành công vào /login thì userName và ip của user đó được lưu vào bảng này
-     * để sau đó user có thể assign tên với server (server thấy tên và ip có trong bảng này thì mới cho assign)
-     * 1 client bắt buộc phải assign tên server trước khi có thể send bất cứ frame nào khác đến server
+     * contain names and secret of clients, used to handle assign command, if client name is not in this table
+     * then they are not allowed to assign
      */
     this.namesTable = new Array();
 
     /**
-     * chứa các object đại diện cho các client đã assigned tên thành công với server, các object
-     * này dùng để in/out đến các client
+     * contain objects of clients, when they connected in to websockServer, the object represent them
+     * will be add to this table, search in this table to find which client we want by their name included in those objects
+     * and then send message to them
      */
     this.onlineTable = new Array();
   }
 
   /**
-   * validate request trước khi accept, ip của request phải có trong allowedIpTable mới được chấp nhận
+   * search allowedIpTable for ip of client, if ip of request found in allowedIpTable then request is valid
    */
   validateRequest(request = new websocket.request()) {
     if (this.allowedIpTable.indexOf(request.remoteAddress) === -1) {
@@ -38,8 +39,7 @@ class newwebsock extends websocket.server {
   }
 
   /**
-   * parse message frame => return message object,
-   * nếu frame không phải json thì return null
+   * parse message frame => return message object
    */
   parseMessage(message) {
     try {
@@ -50,7 +50,7 @@ class newwebsock extends websocket.server {
   }
 
   /**
-   * cho phép request có ip trùng với ip này được phép kết nối đến websockServer
+   * add ip to allowedIpTable
    */
   allowIP(ip = "") {
     if (ip !== null && ip !== "") {
@@ -63,7 +63,7 @@ class newwebsock extends websocket.server {
   }
 
   /**
-   * đưa name và ip và name vào list cho phép đăng nhập server
+   * push name, ip and secret to namesTable
    */
   loginName(name, ip, secret) {
     let ob = {
@@ -78,10 +78,6 @@ class newwebsock extends websocket.server {
     return false;
   }
 
-  /**
-   * khi client close connection thì namesTable và onlineTable nếu có chứa tên và object của client này
-   * sẽ được xóa
-   */
   removeClientNameFromNamesTable(name) {
     const pos = this.namesTable.findIndex((ten) => ten.name === name);
     if (pos !== -1) {
@@ -89,20 +85,17 @@ class newwebsock extends websocket.server {
     }
   }
 
-  /**
-   * thêm client vào onlineTable
-   */
   addClientToOnlineTable(client) {
-    let indexOfNull = this.onlineTable.indexOf(null); // tìm vị trí null trong onlineTable
+    let indexOfNull = this.onlineTable.indexOf(null); // find index of null in onlineTable and put client in that position
     if (indexOfNull == -1) {
-      return this.onlineTable.push(client) - 1;
+      return this.onlineTable.push(client) - 1; // if not then push client to the end of onlineTable
     }
     this.onlineTable[indexOfNull] = client;
     return indexOfNull;
   }
 
   /**
-   * xóa client khỏi onlineTable dùng position
+   * delete client from onlineTable
    */
   removeClientFromOnlineTable(pos) {
     if (pos !== -1) {
@@ -111,7 +104,9 @@ class newwebsock extends websocket.server {
     }
     return -1;
   }
-
+  /**
+   * handle when client close connection
+   */
   clientClose(client) {
     if (client.name) {
       this.removeClientNameFromNamesTable(client.name);
@@ -122,71 +117,8 @@ class newwebsock extends websocket.server {
   }
 
   /**
-   * check frame được client gửi đến để xem có hợp lệ không,
-   * handle việc client assign name với server
-   * call controller khi đã xử lý xong message
+   * handle request by their path, middleware also available
    */
-  handleMessage(frame, client = new websocket.connection()) {
-    if (Object.hasOwn(frame, "control")) {
-      switch (frame.control) {
-        case "assign": // assign them phan secret
-          if (
-            (!Object.hasOwn(frame, "name") || typeof frame.name !== "string") &&
-            (!Object.hasOwn(frame, "secret") ||
-              typeof frame.secret !== "string")
-          ) {
-            // quá trình này check luôn xem name có secret đúng k(secret trong namesTable)
-            client.drop();
-            return false;
-          } else {
-            if (frame.name.length > 20 || frame.secret.length > 20) {
-              client.drop();
-              break;
-            }
-            let positionInNamesTable = this.namesTable.findIndex(
-              (name) =>
-                name.name === frame.name &&
-                this.allowedIpTable.includes(name.ip) === true
-            );
-            if (positionInNamesTable !== -1) {
-              if (!client.assigned) {
-                if (
-                  this.namesTable[positionInNamesTable].secret === frame.secret
-                ) {
-                  client.clientsTablePos = this.addClientToOnlineTable(client);
-                  client.assigned = true;
-                  client.name = frame.name;
-                  return true;
-                } else {
-                  client.drop();
-                  return false;
-                }
-              }
-            } else {
-              client.drop();
-              return false;
-            }
-          }
-        default:
-          // client có control command không phải assign mà không có tên là không hợp lệ
-          // và frame nào không phải control:assign mà có name cũng không hợp lệ
-          if (!client.name || Object.hasOwn(frame, "name")) {
-            client.drop();
-            return false;
-          } else {
-            frame.name = client.name;
-            return true;
-          }
-      }
-    } else {
-      client.drop();
-      return false;
-    }
-  }
-
-  /**
-  handle những request có path trùng với input path
-  */
   handleClientPath(
     inputPath = "",
     request = new websocket.request(),
@@ -197,8 +129,7 @@ class newwebsock extends websocket.server {
     for (let i = 0; i < midleware.length; i++) {
       midleware[i](request);
     }
-    // nếu trước đó request chưa được handle thì thử handle request
-    // bằng cách so sánh input path với path của request(request.resource)
+    // append handled property to request
     if (request.handled !== true && request.validateSuccess == true) {
       if (request.resource.startsWith(inputPath)) {
         cb(request.accept());
@@ -209,7 +140,62 @@ class newwebsock extends websocket.server {
   }
 
   /**
-   * từ chối request nếu nó chưa được handle hoặc request đã bị từ chối đăng nhập bởi validater
+   * handle when client send message
+   */
+  handleMessage(frame, client = new websocket.connection()) {
+    if (Object.hasOwn(frame, "control")) {
+      switch (frame.control) {
+        case "assign": // handle for assign command, the first command that client send
+          if (
+            (!Object.hasOwn(frame, "name") || typeof frame.name !== "string") &&
+            (!Object.hasOwn(frame, "secret") ||
+              typeof frame.secret !== "string")
+          ) {
+            client.drop();
+            return false;
+          } else {
+            if (frame.name.length > 20 || frame.secret.length > 20) {
+              client.drop();
+              break;
+            }
+            let positionInNamesTable = this.namesTable.findIndex(
+              (name) =>
+                name.name === frame.name &&
+                this.allowedIpTable.includes(name.ip) === true &&
+                name.secret === frame.secret
+            ); // check if name and secret is in namesTable
+            if (positionInNamesTable !== -1) {
+              if (!client.assigned) {
+                client.assigned = true; // set assigned to true
+                client.name = frame.name; // append name to client object
+                client.clientsTablePos = this.addClientToOnlineTable(client); // then add client object to onlineTable
+                return true;
+              }
+            } else {
+              client.drop();
+              return false;
+            }
+          }
+        default:
+          // any other command that client send contain name is not allowed, or client object don't have name property also not allowed
+          if (!client.name || Object.hasOwn(frame, "name")) {
+            client.drop();
+            return false;
+          } else {
+            // if client object have name property and frame not contain name property it's ok
+            frame.name = client.name; // append name to frame
+            return true;
+          }
+      }
+    } else {
+      client.drop();
+      return false;
+    }
+  }
+
+  /**
+   * every request that client send to websockServer will be handle by this function
+   * reject request if they not yet handled
    */
   handleReject(request = new websocket.request()) {
     if (request.handled !== true || request.validateSuccess === false) {

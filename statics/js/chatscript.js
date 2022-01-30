@@ -548,7 +548,7 @@ function renderMessageBox(name, type) {
             `uploadFile/from${object.name}to${USER_NAME}-${mes.content}`,
             new Date(mes.time).toLocaleTimeString(),
             object.name,
-            true
+            false
           );
         }
         object.messages.push(mes);

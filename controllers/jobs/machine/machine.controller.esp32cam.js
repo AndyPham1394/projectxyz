@@ -1,8 +1,10 @@
 /**
- * get stream data from esp32cam by http get and send to multi client by eventEmitter
- * create a websocket connection to esp32cam to control rotation
- * create a websocket for client to send command through this server to esp32cam
- * this server act like transporter between client and esp32cam, client send command to esp32cam through this server
+ * get data from esp32cam and broadcast to all client by emit an event "stream-data"
+ * those client access path "/machine/client" will receive the data we broadcasted
+ * monitor numbers of client accessing "/machine/client", if no client accessing, we don't broadcast data and stop get data from esp32cam
+ * this server act like websocket transporter between client and esp32cam, client send command to esp32cam through this server
+ * create a websocket connection to esp32cam to control rotation & on/off camera's led
+ * create a websocket server listen for client to send command through this server to esp32cam
  */
 const express = require("express");
 const esp = express.Router();
@@ -20,7 +22,7 @@ esp.get("/", (req, res) => {
     res.send("cameraip not available").end();
   }
 });
-// command setting from client to esp32cam through server ( disabled )
+// command setting from client to esp32cam through server ( disabled due to camera unstable when changing camera's setting )
 esp.get("/control", (req, res) => {
   if (cameraip != "") {
     let url =
@@ -40,8 +42,7 @@ esp.get("/control", (req, res) => {
   }
 });
 
-// maintain a client list, when a client connect to websocket, add 1 to state
-// -1 when client disconnect
+// when client-counter > 0 , start get data from esp32cam and broadcast by emit event "stream-data"
 // server only get data from esp32cam, when state > 0, that data will be emit by 'stream-data' event
 // every client connect to this server can catch this event to get stream data
 let x = new EventEmitter(); // tao eventEmitter 'x'
@@ -81,7 +82,7 @@ x.on("client-counter", (data) => {
   }
 });
 /**
- * client access /client to get stream data from esp32cam
+ * Access /client to get stream data from esp32cam by catching 'stream-data' event
  * this camera module output data in multipart/x-mixed-replace format
  */
 esp.get("/client", (req, res) => {
@@ -122,40 +123,31 @@ esp.post("/addCameraIp", (req, res) => {
 });
 
 /**
- * create websocket connection to esp32cam to control rotation
+ * websocket transport message between client and esp32cam
  */
-const server = http.createServer((req, res) => {
-  res.setHeader("content-type", "text/plain");
-  res.write("xin chao ban");
-  res.end();
-});
-server.listen(process.env.MACHINEWEBSOCKETPORT, () => {
-  console.log(
-    "machine's websocket started on port",
-    process.env.MACHINEWEBSOCKETPORT
-  );
-});
-/**
- * websocket transport between client and esp32cam
- */
+// server
+const server = http.createServer();
+// bind this server to websocket server
 const wscon = new Websockets.server({
   httpServer: server,
 });
+var wsevent = new EventEmitter();
+// server on request from client
 wscon.on("request", (request) => {
-  var client = request.accept();
-  x.emit("client-counter", 1);
+  var client = request.accept(); // accept connection
+  x.emit("client-counter", 1); // increase client counter
   client.on("message", (data) => {
-    wsevent.emit("message", data.utf8Data);
+    wsevent.emit("message", data.utf8Data); // emit message when client send message to server
   });
   client.on("close", () => {
-    x.emit("client-counter", -1);
+    x.emit("client-counter", -1); // decrease client counter when client disconnect
   });
 });
-
 var wscon2;
-var wsevent = new EventEmitter();
 wsevent.on("message", (data) => {
+  // catch 'message' event
   if (!wscon2) {
+    // if there is no ws connection to esp32cam then create one and send message to esp32cam
     let wscon3 = new Websockets.client();
     wscon3.on("connect", (connection) => {
       if (connection.connected) {
@@ -170,10 +162,17 @@ wsevent.on("message", (data) => {
     };
     wscon3.connect(`ws://${cameraip}:83`, "arduino");
   } else {
+    // send message if there is ws connection to esp32cam
     wscon2.sendUTF(data);
   }
 });
-
+// server listen on port ...
+server.listen(process.env.MACHINEWEBSOCKETPORT, () => {
+  console.log(
+    "machine's websocket started on port",
+    process.env.MACHINEWEBSOCKETPORT
+  );
+});
 //////////////////////////////////////////////////////////
 const esp32 = {};
 esp32.esp32Controller = esp;

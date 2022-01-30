@@ -1,3 +1,6 @@
+/**
+ * handle http request from client like sigin, signup, post avatar, post media
+ */
 const Model = require("./jobs/chat/chat.websocketServerModel");
 const crypto = require("crypto");
 const fs = require("fs");
@@ -28,18 +31,19 @@ async function addUser(info) {
   }
   return false;
 }
-// khởi động websocket server ở child process
+// fork a child process to run the websocket server, separate from main process
 const cp = require("child_process");
 var websockServer = cp.fork(
   `${__dirname}/jobs/chat/chat.websockServerRouter.js`
 );
-var onlineTable = [];
+
 // websocket server inform when user disconnect
+var onlineTable = [];
 websockServer.on("message", (mess) => {
   if (Object.hasOwn(mess, "logout")) {
     let index = onlineTable.indexOf(mess.logout);
     if (index >= 0) {
-      let p = onlineTable.splice(index, 1);
+      onlineTable.splice(index, 1);
     }
   }
 });
@@ -47,24 +51,20 @@ websockServer.on("exit", (exitcode) => {
   console.log(`websocket server exited with code ${exitcode}`);
   websockServer = cp.fork(`${__dirname}/jobs/chat/chat.websockServerRouter.js`);
 });
-websockServer.on("spawn", (exitcode) => {
+websockServer.on("spawn", () => {
   console.log("spawned child running process for chat websocket server");
 });
 websockServer.on("err", (exitcode) => {
   console.log("chat websocket server error");
   console.log(err);
 });
+
 /**
- * load chat Mainpage
- */
-controller.getMainPage = (req, res, next) => {
-  next();
-};
-/**
- * handle login post request, validate password
+ * handle login post request, validate password render response by result
  */
 controller.handleLogin = async (req, res, next) => {
   if (Object.hasOwn(req.body, "user") && Object.hasOwn(req.body, "password")) {
+    // check input before process
     if (
       req.body.user.length >= 4 &&
       req.body.user.length <= 20 &&
@@ -72,13 +72,15 @@ controller.handleLogin = async (req, res, next) => {
       req.body.password.length <= 20
     ) {
       if (onlineTable.includes(req.body.user)) {
+        // already login
         res.render("chatLogIn", {
           MESSAGE: "Login failed! please use another account.",
         });
       } else {
-        let x = await getUserPassWord(req.body.user);
+        let x = await getUserPassWord(req.body.user); // if user do exist in database then get password
         if (x) {
           crypto.pbkdf2(
+            // use .env to set this function maybe?
             req.body.password,
             "mackhenhatdoi",
             1024,
@@ -91,7 +93,8 @@ controller.handleLogin = async (req, res, next) => {
               }
               let encPassword = result.toString("hex");
               if (encPassword === x) {
-                var secret = Math.random().toString(16).slice(2);
+                // password match
+                var secret = Math.random().toString(16).slice(2); // create secret key and send back to client with response
                 res.render("chat", {
                   USERNAME: req.body.user,
                   SECRET: secret,
@@ -134,11 +137,11 @@ controller.handlePostMedia = (req, res, next) => {
   } else {
     // name file as format : 'from'+fromwho+towho+filename
     fs.open(
-      `./statics/uploadFile/from${req.body.from}to${req.body.to}-${req.files.file.name}`,
+      `./statics/uploadFile/from${req.body.from}to${req.body.to}-${req.files.file.name}`, // open a file, overwrite if exist, create if not exist
       "w+",
       (err, fd) => {
         if (!err) {
-          fs.write(fd, req.files.file.data, (err, writen, buffer) => {});
+          fs.write(fd, req.files.file.data, (err, writen, buffer) => {}); // write data to file and close fd
           fs.close(fd);
           res.send(`${req.files.file.name}`).end();
         }
@@ -155,11 +158,11 @@ controller.handlePostAvatar = (req, res, next) => {
   } else {
     // name file as format : 'avatar'+username+filename
     fs.open(
-      `./statics/uploadAvatar/avatar${req.body.from}${req.files.file.name}`,
+      `./statics/uploadAvatar/avatar${req.body.from}${req.files.file.name}`, // open a file, overwrite if exist, create if not exist
       "w+",
       (err, fd) => {
         if (!err) {
-          fs.write(fd, req.files.file.data, (err, writen, buffer) => {});
+          fs.write(fd, req.files.file.data, (err, writen, buffer) => {}); // write data to file and close fd
           fs.close(fd);
           res.send(`avatar${req.body.from}${req.files.file.name}`).end();
         }
@@ -167,12 +170,9 @@ controller.handlePostAvatar = (req, res, next) => {
     );
   }
 };
+
 /**
- * handle các request get media từ server
- */
-controller.handleGetMedia = (req, res, next) => {};
-/**
- * handle post newuser request, check and create new user in database
+ * newUser request, check and create new user in database
  */
 controller.handleNewUser = async (req, res, next) => {
   if (Object.hasOwn(req.body, "user") && Object.hasOwn(req.body, "password")) {

@@ -1,17 +1,14 @@
-// controller của websocket,
-// module trung gian giữa websocketServer và Model, module này sẽ nhận các message được gửi đến từ router
-// và gửi message đến các user liên quan đến message đó, và lưu giữ message vào cơ sở dữ liệu tương ứng
+// controller for websocket
+// this module receive frame data from websocketServerRouter and pass to Model
+// then receive result from Model and emit event to websocketServerRouter
 const { EventEmitter } = require("stream");
 const Model = require("./chat.websocketServerModel");
 const controller = new EventEmitter();
-const fs = require("fs");
 /**
- * xử lý messagecall đến từ serverRouter
- * check các input từ client trước khi call model, các command phải đủ các field
- * type của các input phải đúng
+ * handles
  */
 controller.call = async (frame) => {
-  // thêm time vào frame
+  // add time to frame
   frame.time = new Date();
   if (Object.hasOwn(frame, "control")) {
     switch (frame.control) {
@@ -49,8 +46,6 @@ controller.call = async (frame) => {
           ) {
             break;
           }
-          // tùy theo yêu cầu của client mà chọn vị trí message sẽ gửi
-          // tối đa 20 message
           if (Number.isInteger(frame.from)) {
             let ret = await Model.call(2, frame);
             if (ret) {
@@ -71,9 +66,6 @@ controller.call = async (frame) => {
             controller.emit("getReturn", mes);
           }
         }
-        /* get command, lấy thông tin cần thiết tùy vào các argument của get, như type, destination, from 
-            lấy data từ mongodb và gửi lại cho client
-          */
         break;
       }
       case "message": {
@@ -117,10 +109,8 @@ controller.call = async (frame) => {
           ) {
             break;
           }
-          // return danh sách các members
           let res = await Model.call(4, frame);
           if (res) {
-            // emit thông báo delete đến các thành viên
             let mes = {
               members: res,
               frame: frame,
@@ -148,10 +138,8 @@ controller.call = async (frame) => {
           ) {
             break;
           }
-          // return true/false
           let res = await Model.call(5, frame);
           if (res) {
-            // emit thông báo create đến các thành viên
             controller.emit("createReturn", frame);
           }
         }
@@ -167,16 +155,11 @@ controller.call = async (frame) => {
             !Array.isArray(frame.destination)
           ) {
             break;
-          } else if (
-            frame.type.length > 20 ||
-            frame.destination[0].length > 20
-          ) {
+          } else if (frame.destination[0].length > 20) {
             break;
           }
-          // return true/false
           let res = await Model.call(6, frame);
           if (res) {
-            // emit thông báo invite đến các thành viên
             let mes = {
               members: [frame.destination[1], ...res],
               frame: frame,
@@ -196,16 +179,11 @@ controller.call = async (frame) => {
             !Array.isArray(frame.destination)
           ) {
             break;
-          } else if (
-            frame.type.length > 20 ||
-            frame.destination[0].length > 20
-          ) {
+          } else if (frame.destination[0].length > 20) {
             break;
           }
-          // return danh sách các member trong nhóm
           let res = await Model.call(7, frame);
           if (res) {
-            // emit thông báo đến người trong nhóm
             let mes = {
               members: res,
               frame: frame,
@@ -220,10 +198,7 @@ controller.call = async (frame) => {
           if (frame.name.length > 20) {
             break;
           }
-          let res = await Model.call(8, frame);
-          // if (res) {
-          //   controller.emit("avataruploadReturn", res);
-          // }
+          await Model.call(8, frame);
         }
         break;
       }

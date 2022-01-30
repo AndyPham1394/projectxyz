@@ -5,7 +5,6 @@ const bodyParser = require("body-parser");
 const chatController = require("../controllers/controller.chatController");
 const path = require("path");
 
-// this HTTP router use to handle HTTP request from client
 /////////////////////////////////////////////////////////////////////////
 // use express-fileupload middleware to handle file uploads in routes
 chatRouter.use(
@@ -15,10 +14,10 @@ chatRouter.use(
 );
 chatRouter.use(express.static("statics"));
 chatRouter.use(bodyParser.urlencoded({ extended: true }));
-chatRouter.get("/", chatController.getMainPage, (req, res) => {
+chatRouter.get("/", (req, res) => {
   res.render("chatLogIn", { MESSAGE: "" });
 });
-chatRouter.get("/signup", chatController.getMainPage, (req, res) => {
+chatRouter.get("/signup", (req, res) => {
   res.render("chatSignUp", { MESSAGE: "" });
 });
 // create new user
